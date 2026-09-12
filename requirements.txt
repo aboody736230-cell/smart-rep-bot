@@ -1,0 +1,4 @@
+flask
+gunicorn
+pg8000
+requests
