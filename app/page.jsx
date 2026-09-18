@@ -75,7 +75,7 @@ export default function Home() {
     <main className="store-shell" dir="rtl">
       <div className="store-container">
         <header className="store-header">
-          <div className="brand-block"><span className="brand-mark">K</span><h1>KADEL</h1><span className="brand-arabic">متجر</span></div>
+          <div className="brand-block"><span className="brand-mark">K</span><h1>Kadel</h1><span className="brand-arabic">متجر</span></div>
           <div className="search-box">
             <Search aria-hidden="true" />
             <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="ابحث عن منتجك المفضل..." aria-label="البحث عن منتج" />
@@ -104,7 +104,7 @@ export default function Home() {
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${openCategory === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <button type="button" className="section-banner" onClick={() => { setOpenCategory(category.id); window.scrollTo({ top: sectionRefs.current[category.id]?.offsetTop - 20, behavior: 'smooth' }); }}><div><span>مختارات كادل</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
+              <button type="button" className="section-banner" onClick={() => { setOpenCategory(category.id); window.scrollTo({ top: sectionRefs.current[category.id]?.offsetTop - 20, behavior: 'smooth' }); }}><div><span className="banner-category-name">{category.icon} {detail.title}</span><span>مختارات كادل</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
               <article className="product-card"><div className="product-information"><span className="store-label">{detail.product.store}</span><h3>{detail.product.title}</h3><p className="product-price">{detail.product.price}</p><div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div><button type="button" className="whatsapp-button" onClick={() => shareOnWhatsApp(detail.product)}><MessageCircle aria-hidden="true" /> مشاركة عبر واتساب</button></div><div className="product-image-wrapper"><img src={detail.image} alt={detail.product.title} /></div></article>
             </section>;
           })}
