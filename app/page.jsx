@@ -32,7 +32,7 @@ function Dots({ count, active }) {
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [sectionSlides, setSectionSlides] = useState(Object.fromEntries(categories.map(({ id }) => [id, 0])));
-  const [openCategory, setOpenCategory] = useState('shoes');
+  const [openCategory, setOpenCategory] = useState(null);
   const [activeSubcategory, setActiveSubcategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
@@ -53,9 +53,10 @@ export default function Home() {
   }, []);
 
   const selectCategory = (category) => {
-    setOpenCategory(category.id);
+    const isClosing = openCategory === category.id;
+    setOpenCategory(isClosing ? null : category.id);
     setActiveSubcategory('');
-    sectionRefs.current[category.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!isClosing) sectionRefs.current[category.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const chooseImage = (event) => {
