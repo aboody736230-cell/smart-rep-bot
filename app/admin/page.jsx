@@ -1,87 +1,81 @@
 'use client';
-import { useState } from 'react';
+
+import { useMemo, useState } from 'react';
+import { Edit3, ExternalLink, Filter, Link2, LockKeyhole, LogIn, Plus, Save, Search, Store, Trash2, UploadCloud } from 'lucide-react';
+
+const stores = ['SHEIN', 'Amazon', 'Temu', 'AliExpress', 'نون', 'نمشي', 'ترينديول'];
+const categories = [
+  { name: 'الأحذية', branches: ['أحذية رياضية', 'أحذية مشي', 'أحذية كعب', 'أحذية كاجوال'] },
+  { name: 'الملابس', branches: ['فساتين', 'بلوزات', 'فساتين سهرات', 'جينزات', 'ملابس داخلية', 'سراويل'] },
+  { name: 'الشنط', branches: ['شنط كتف', 'شنط سهرات', 'شنط يد'] },
+  { name: 'العناية والجمال', branches: ['مكياج وتجميل', 'العناية بالشعر', 'العناية بالبشرة'] },
+  { name: 'العطور', branches: [] },
+];
+
+const initialProducts = [
+  { id: 1, title: 'منتج تجريبي — سيظهر هنا بعد السحب', store: 'SHEIN', category: 'الأحذية', branch: 'أحذية رياضية', price: '—', status: 'مسودة', image: '' },
+];
 
 export default function AdminPage() {
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [store, setStore] = useState(stores[0]);
+  const [category, setCategory] = useState(categories[0].name);
+  const [branch, setBranch] = useState(categories[0].branches[0]);
+  const [productUrl, setProductUrl] = useState('');
+  const [products, setProducts] = useState(initialProducts);
+  const [search, setSearch] = useState('');
+  const [notice, setNotice] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
-  const handleScrape = async () => {
-    setLoading(true);
-    setMessage('جاري تشغيل أداة الشفط وجلب المنتجات...');
-    try {
-      // يمكنك ربط رابط مسار الـ API الخاص بالشفط هنا مستقبلاً
-      setTimeout(() => {
-        setLoading(false);
-        setMessage('تمت عملية الشفط وتحديث المنتجات بنجاح!');
-      }, 2000);
-    } catch (error) {
-      setLoading(false);
-      setMessage('حدث خطأ أثناء عملية الشفط.');
+  const selectedCategory = categories.find((item) => item.name === category) || categories[0];
+  const filteredProducts = useMemo(() => products.filter((product) => [product.title, product.store, product.category, product.branch].join(' ').toLowerCase().includes(search.toLowerCase())), [products, search]);
+
+  const login = (event) => {
+    event.preventDefault();
+    if (!credentials.username || !credentials.password) {
+      setNotice('اكتب اسم المستخدم وكلمة المرور للمتابعة.');
+      return;
     }
+    setLoggedIn(true);
+    setNotice('تم فتح لوحة التحكم لهذه الجلسة. اربط التحقق الحقيقي من السيرفر قبل النشر النهائي.');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-6" dir="rtl">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">لوحة تحكم متجر KADEL 🛍️</h1>
-        
-        {/* بطاقات الإحصائيات */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-            <h3 className="text-gray-400 text-sm">إجمالي المنتجات</h3>
-            <p className="text-2xl font-bold mt-2">128</p>
-          </div>
-          <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-            <h3 className="text-gray-400 text-sm">حالة أداة الشفط</h3>
-            <p className="text-2xl font-bold mt-2 text-green-400">جاهز للعمل</p>
-          </div>
-          <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-            <h3 className="text-gray-400 text-sm">آخر تحديث</h3>
-            <p className="text-2xl font-bold mt-2">اليوم</p>
-          </div>
-        </div>
+  const changeCategory = (value) => {
+    const next = categories.find((item) => item.name === value) || categories[0];
+    setCategory(next.name);
+    setBranch(next.branches[0] || 'بدون فرع');
+  };
 
-        {/* قسم أداة الشفط */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow mb-8 border border-gray-700">
-          <h2 className="text-xl font-semibold mb-4">أداة شفط البيانات</h2>
-          <button 
-            onClick={handleScrape}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition disabled:opacity-50 cursor-pointer"
-          >
-            {loading ? 'جاري الشفط...' : 'بدء عملية الشفط الآن 🔄'}
-          </button>
-          {message && <p className="mt-4 text-sm text-yellow-400">{message}</p>}
-        </div>
+  const startScrape = (event) => {
+    event.preventDefault();
+    if (!productUrl.trim()) {
+      setNotice('ألصق رابط المنتج أولًا.');
+      return;
+    }
+    setNotice(`تم تجهيز الرابط للسحب من ${store}. محرك السحب الحقيقي يحتاج ربط API/موصل المتجر في الخطوة التالية.`);
+    setProductUrl('');
+  };
 
-        {/* جدول المنتجات */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow border border-gray-700">
-          <h2 className="text-xl font-semibold mb-4">المنتجات الحالية</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-right">
-              <thead>
-                <tr className="border-b border-gray-700 text-gray-400">
-                  <th className="pb-3">اسم المنتج</th>
-                  <th className="pb-3">السعر</th>
-                  <th className="pb-3">الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-700/50">
-                  <td className="py-3">منتج تجريبي 1</td>
-                  <td className="py-3">$45.00</td>
-                  <td className="py-3 text-green-400">نشط</td>
-                </tr>
-                <tr>
-                  <td className="py-3">منتج تجريبي 2</td>
-                  <td className="py-3">$89.00</td>
-                  <td className="py-3 text-green-400">نشط</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const deleteProduct = (id) => {
+    setProducts((current) => current.filter((product) => product.id !== id));
+    setNotice('تم حذف المنتج من قائمة العرض الحالية.');
+  };
+
+  const saveEdit = (id, field, value) => {
+    setProducts((current) => current.map((product) => product.id === id ? { ...product, [field]: value } : product));
+    setEditingId(null);
+    setNotice('تم حفظ التعديل في العرض الحالي.');
+  };
+
+  if (!loggedIn) {
+    return <main className="admin-page" dir="rtl"><div className="admin-login-card"><div className="admin-logo"><LockKeyhole /></div><p className="admin-kicker">KADEL ADMIN</p><h1>مرحبًا بك في لوحة الإدارة</h1><p className="admin-muted">سجّل الدخول لإدارة المتاجر والأقسام والمنتجات.</p><form onSubmit={login} className="admin-form"><label>اسم المستخدم<input value={credentials.username} onChange={(event) => setCredentials({ ...credentials, username: event.target.value })} placeholder="اسم المستخدم" autoComplete="username" /></label><label>كلمة المرور<input type="password" value={credentials.password} onChange={(event) => setCredentials({ ...credentials, password: event.target.value })} placeholder="كلمة المرور" autoComplete="current-password" /></label><button className="admin-primary-button" type="submit"><LogIn /> دخول لوحة التحكم</button></form>{notice && <p className="admin-notice">{notice}</p>}</div></main>;
+  }
+
+  return <main className="admin-page" dir="rtl"><div className="admin-container"><header className="admin-header"><div><p className="admin-kicker">KADEL ADMIN</p><h1>لوحة إدارة المتجر</h1><p className="admin-muted">اسحب المنتجات، صنّفها، ثم راجعها قبل ظهورها في المتجر.</p></div><button className="admin-outline-button" type="button" onClick={() => setLoggedIn(false)}>تسجيل الخروج</button></header>
+    <section className="admin-stats"><div><span>المتاجر المدعومة</span><strong>{stores.length}</strong></div><div><span>المنتجات المعروضة</span><strong>{products.length}</strong></div><div><span>الفروع</span><strong>{categories.reduce((sum, item) => sum + item.branches.length, 0)}</strong></div></section>
+    <section className="admin-panel"><div className="panel-heading"><div><h2><UploadCloud /> سحب منتج جديد</h2><p>اختر مصدر الرابط والقسم والفرع قبل حفظ المنتج.</p></div><span className="safe-label">سحب من جهة السيرفر</span></div><form onSubmit={startScrape} className="scrape-grid"><label>المتجر<select value={store} onChange={(event) => setStore(event.target.value)}>{stores.map((item) => <option key={item}>{item}</option>)}</select></label><label>القسم<select value={category} onChange={(event) => changeCategory(event.target.value)}>{categories.map((item) => <option key={item.name}>{item.name}</option>)}</select></label><label>الفرع<select value={branch} onChange={(event) => setBranch(event.target.value)}>{(selectedCategory.branches.length ? selectedCategory.branches : ['بدون فرع']).map((item) => <option key={item}>{item}</option>)}</select></label><label className="url-field">رابط المنتج<input value={productUrl} onChange={(event) => setProductUrl(event.target.value)} placeholder="https://..." type="url" dir="ltr" /></label><button className="admin-primary-button scrape-button" type="submit"><Link2 /> بدء السحب</button></form><p className="admin-helper">سيتم استخراج الاسم والصور والسعر والوصف عند ربط موصل المتجر المناسب.</p></section>
+    <section className="admin-panel"><div className="panel-heading"><div><h2><Store /> المنتجات الحالية</h2><p>راجع المنتجات وعدّل بياناتها أو احذفها قبل النشر.</p></div><div className="admin-search"><Search /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="بحث في المنتجات" /></div></div><div className="product-table-wrap"><table className="product-table"><thead><tr><th>المنتج</th><th>المتجر</th><th>القسم والفرع</th><th>السعر</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>{filteredProducts.map((product) => <tr key={product.id}><td><div className="product-name-cell"><div className="product-thumb">{product.image ? <img src={product.image} alt="" /> : <span>صورة</span>}</div>{editingId === product.id ? <input className="inline-edit" defaultValue={product.title} onBlur={(event) => saveEdit(product.id, 'title', event.target.value)} autoFocus /> : <strong>{product.title}</strong>}</div></td><td>{product.store}</td><td><span>{product.category}</span><small>{product.branch}</small></td><td>{editingId === product.id ? <input className="inline-edit price-edit" defaultValue={product.price} onBlur={(event) => saveEdit(product.id, 'price', event.target.value)} /> : product.price}</td><td><span className="status-badge">{product.status}</span></td><td><div className="row-actions"><button type="button" title="تعديل" onClick={() => setEditingId(product.id)}><Edit3 /></button><button type="button" title="حفظ" onClick={() => setEditingId(null)}><Save /></button><button type="button" title="حذف" onClick={() => deleteProduct(product.id)}><Trash2 /></button>{product.image && <a href={product.image} target="_blank" rel="noreferrer" title="فتح الصورة"><ExternalLink /></a>}</div></td></tr>)}</tbody></table></div></section>
+    {notice && <p className="admin-notice">{notice}</p>}
+  </div></main>;
 }
