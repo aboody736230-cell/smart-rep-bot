@@ -39,6 +39,7 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageSearchMessage, setImageSearchMessage] = useState('');
   const sectionRefs = useRef({});
+  const categoriesRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Home() {
     const isClosing = openCategory === category.id;
     setOpenCategory(isClosing ? null : category.id);
     setActiveSubcategory('');
-    if (!isClosing) sectionRefs.current[category.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    categoriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const chooseImage = (event) => {
@@ -87,7 +88,7 @@ export default function Home() {
           <div className="hero-sparkles">✦ ✧ ✦</div><Dots count={heroSlides.length} active={heroIndex} />
         </section>
 
-        <nav className="categories" aria-label="أقسام المتجر">
+        <nav ref={categoriesRef} className="categories" aria-label="أقسام المتجر">
           {categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}
         </nav>
 
@@ -100,7 +101,7 @@ export default function Home() {
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <button type="button" className={`section-banner ${activeBanner === category.id ? 'section-banner-active' : ''}`} onClick={() => { setOpenCategory(category.id); setActiveBanner(category.id); window.scrollTo({ top: sectionRefs.current[category.id]?.offsetTop - 20, behavior: 'smooth' }); }}><div><span className="banner-category-name">{category.icon} {detail.title}</span><span>مختارات كادل</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
+              <button type="button" className={`section-banner ${activeBanner === category.id ? 'section-banner-active' : ''}`} onClick={() => { setOpenCategory(category.id); setActiveBanner(category.id); categoriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><div><span className="banner-category-name">{category.icon} {detail.title}</span><span>مختارات كادل</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
               <article className="product-card"><div className="product-information"><span className="store-label">{detail.product.store}</span><h3>{detail.product.title}</h3><p className="product-price">{detail.product.price}</p><div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={detail.image} alt={detail.product.title} /></div></article>
             </section>;
           })}

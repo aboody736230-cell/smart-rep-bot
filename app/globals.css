@@ -13,3 +13,5 @@
 .section-banner-active{background:linear-gradient(105deg,#ffdce7,#fff0f5)!important;border-color:#f0a9bd;box-shadow:0 9px 24px #efa6ba55}.section-heading-highlighted .section-title-row h2{color:#1598bd;text-shadow:0 1px 0 #fff}.section-heading-highlighted .section-accent{background:#d9f3ff;color:#1598bd}
 
 .category-pill-sky{border-color:#91dff3!important;background:#d9f3ff!important;color:#1689aa!important;box-shadow:0 6px 18px #8ed9ed66!important}.category-pill-sky .category-chevron{color:#1689aa}
+
+@media(max-width:650px){.categories{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;overflow:visible;padding-left:0;padding-right:0}.category-pill{min-width:0;min-height:58px;flex-direction:column;gap:3px;padding:5px 2px;border-radius:13px;white-space:normal;text-align:center;font-size:.66rem;line-height:1.35}.category-icon{font-size:1.05rem}.category-chevron{width:12px}}
