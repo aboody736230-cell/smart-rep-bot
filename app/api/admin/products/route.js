@@ -32,7 +32,12 @@ export async function POST(request) {
   if (unauthorized(request)) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
   const body = await request.json().catch(() => ({}));
   if (!body.title || !body.price || !body.image || !body.url || !body.store || !body.category) return NextResponse.json({ error: 'بيانات المنتج ناقصة.' }, { status: 400 });
-  const response = await supabaseRequest('', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name: body.title, price: Number.parseFloat(String(body.price).replace(/[^0-9.]/g, '')) || 0, price_text: String(body.price).trim(), image_url: body.image, description: body.description || '', affiliate_url: body.url, store: body.store, category: body.category, branch: body.branch || 'بدون فرع', status: 'published' }) });
+  const affiliateUrl = String(body.url).trim();
+  const duplicateResponse = await supabaseRequest(`?select=id,name,affiliate_url&affiliate_url=eq.${encodeURIComponent(affiliateUrl)}&limit=1`);
+  if (!duplicateResponse.ok) return NextResponse.json({ error: 'تعذر التحقق من وجود الرابط السابق.' }, { status: 502 });
+  const duplicateRows = await duplicateResponse.json();
+  if (Array.isArray(duplicateRows) && duplicateRows.length > 0) return NextResponse.json({ error: 'هذا الرابط والمنتج موجودان من قبل داخل المتجر.' }, { status: 409 });
+  const response = await supabaseRequest('', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name: body.title, price: Number.parseFloat(String(body.price).replace(/[^0-9.]/g, '')) || 0, price_text: String(body.price).trim(), image_url: body.image, description: body.description || '', affiliate_url: affiliateUrl, store: body.store, category: body.category, branch: body.branch || 'بدون فرع', status: 'published' }) });
   if (!response.ok) return NextResponse.json({ error: 'تعذر حفظ المنتج في Supabase.' }, { status: 502 });
   const rows = await response.json();
   return NextResponse.json({ product: toClient(rows[0]) }, { status: 201 });

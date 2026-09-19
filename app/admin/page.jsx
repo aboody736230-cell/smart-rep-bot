@@ -80,6 +80,7 @@ export default function AdminPage() {
 
   const addProductToStore = async () => {
     if (!productUrl.trim() || !productDraft.title.trim() || !productDraft.price.trim() || !productDraft.image.trim()) return setNotice('أكمل رابط العمولة واسم المنتج والسعر ورابط الصورة أولًا.');
+    if (products.some((product) => product.url?.trim() === productUrl.trim())) return setNotice('هذا الرابط والمنتج موجودان من قبل داخل المتجر.');
     const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setNotice(data.error || 'تعذر حفظ المنتج.');
