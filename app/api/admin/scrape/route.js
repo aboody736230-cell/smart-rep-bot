@@ -82,6 +82,17 @@ function currencyFromDocument($, html, fallback) {
   return meta($, 'product:price:currency') || $('[itemprop="priceCurrency"]').first().attr('content') || (html.match(/(?:currencyCode|currency|priceCurrency)["']?\s*[:=]\s*["']?(SAR|AED|USD|GBP|EUR|CAD|INR|TRY)/i)?.[1] || fallback);
 }
 
+function amazonAsin(value) {
+  return String(value || '').match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1] || '';
+}
+
+function amazonProductFields($) {
+  const title = $('#productTitle').first().text().trim();
+  const image = $('#landingImage').attr('data-old-hires') || $('#landingImage').attr('src') || $('#imgBlkFront').attr('src') || '';
+  const priceText = $('#corePriceDisplay_desktop_feature_div .a-offscreen, #corePrice_desktop .a-offscreen, #priceblock_ourprice, #priceblock_dealprice, .a-price .a-offscreen').first().text().trim();
+  return { title, image, priceText };
+}
+
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const { url, store, category, branch } = body;
@@ -107,6 +118,35 @@ export async function POST(request) {
     let description = firstValue(product.description) || meta($, 'og:description') || $('meta[name="description"]').attr('content')?.trim() || '';
     let price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, html);
     let currency = firstValue(offers.priceCurrency) || currencyFromDocument($, html, store === 'Amazon' ? currencyFromHost(finalUrl.hostname) : '');
+
+    if (store === 'Amazon') {
+      const amazonFields = amazonProductFields($);
+      title = amazonFields.title || title;
+      image = amazonFields.image || image;
+      if (!price && amazonFields.priceText) price = amazonFields.priceText.match(/[0-9]+(?:[.,][0-9]{1,2})?/)?.[0]?.replace(',', '.') || '';
+      if (!currency) currency = currencyFromHost(finalUrl.hostname);
+    }
+
+    if (store === 'Amazon' && (!title || !image || !price)) {
+      const asin = amazonAsin(finalUrl.toString()) || amazonAsin(target.toString()) || amazonAsin(html);
+      if (asin) {
+        try {
+          const mobileUrl = `${finalUrl.origin}/gp/aw/d/${asin}`;
+          const mobileResponse = await fetch(mobileUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+          if (mobileResponse.ok) {
+            const mobileHtml = await mobileResponse.text();
+            $ = cheerio.load(mobileHtml);
+            const mobileProduct = collectJsonLd($);
+            const mobileOffers = mobileProduct.offers || {};
+            const mobileFields = amazonProductFields($);
+            title = title || mobileFields.title || firstValue(mobileProduct.name) || meta($, 'og:title');
+            image = image || mobileFields.image || firstValue(mobileProduct.image) || meta($, 'og:image');
+            price = price || firstValue(mobileOffers.price) || firstValue(mobileOffers.lowPrice) || priceFromDocument($, mobileHtml) || mobileFields.priceText.match(/[0-9]+(?:[.,][0-9]{1,2})?/)?.[0]?.replace(',', '.') || '';
+            currency = firstValue(mobileOffers.priceCurrency) || currencyFromDocument($, mobileHtml, currency || currencyFromHost(finalUrl.hostname));
+          }
+        } catch {}
+      }
+    }
 
     const linkedProductUrl = $('#url').attr('value') || $('input[name="url"]').attr('value') || '';
     if (!price && linkedProductUrl) {
