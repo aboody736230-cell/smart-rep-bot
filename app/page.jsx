@@ -52,6 +52,8 @@ export default function Home() {
     fetch('/api/store/products').then((response) => response.json()).then((data) => setPublishedProducts(Array.isArray(data.products) ? data.products : [])).catch(() => setPublishedProducts([]));
   }, []);
 
+  const visibleCategories = openCategory ? categories.filter((category) => category.id === openCategory) : categories;
+
   useEffect(() => {
     const timer = setInterval(() => {
       setSectionSlides((current) => Object.fromEntries(Object.entries(current).map(([id, index]) => [id, (index + 1) % categoryDetails[id].slides.length])));
@@ -99,10 +101,10 @@ export default function Home() {
         {openCategory && categories.find((category) => category.id === openCategory)?.subcategories.length > 0 && <div className="subcategory-panel"><div className="subcategory-heading"><span>فروع {categories.find((category) => category.id === openCategory).name}</span><span className="subcategory-count">اختر الفرع</span></div><div className="subcategory-list">{categories.find((category) => category.id === openCategory).subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div></div>}
 
         <div className="sections-list">
-          {categories.map((category) => {
+          {visibleCategories.map((category) => {
             const detail = categoryDetails[category.id];
             const slideIndex = sectionSlides[category.id];
-            const liveProduct = publishedProducts.find((product) => product.category === category.name);
+            const liveProduct = publishedProducts.find((product) => product.category === category.name && (!activeSubcategory || product.branch === activeSubcategory));
             const displayedProduct = liveProduct ? { ...detail.product, title: liveProduct.title, price: liveProduct.price, store: liveProduct.store } : detail.product;
             const displayedImage = liveProduct?.image || detail.image;
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
