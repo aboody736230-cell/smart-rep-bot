@@ -143,6 +143,8 @@ export default function Home() {
           {activeChildBranch && childSubcategories[activeChildBranch] && <div className="kids-subcategory-list kids-store-subcategories"><span>اختيارات {activeChildBranch}</span>{childSubcategories[activeChildBranch].map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}
         </section>
 
+        <section className="lady-intro" aria-label="رسالة كادل للسيدات"><span className="lady-intro-line" /><div><strong>لكِ أنتِ سيدتي</strong><p>انتقينا لكِ تشكيلة واسعة بعناية وبحب</p></div><span className="lady-intro-line" /></section>
+
         <nav ref={categoriesRef} className="categories" aria-label="أقسام المتجر">
           {categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}
         </nav>
@@ -155,11 +157,12 @@ export default function Home() {
             const slideIndex = sectionSlides[category.id];
             const selectedBranch = activeSubcategory;
             const categoryProducts = publishedProducts.filter((product) => product.category === category.name && (!selectedBranch || product.branch === selectedBranch));
-            const productsToShow = categoryProducts.length ? categoryProducts : [{ ...detail.product, image: detail.image }];
+            const canShowProducts = openCategory === category.id && (selectedBranch || category.subcategories.length === 0);
+            const productsToShow = canShowProducts ? categoryProducts : [];
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{selectedBranch && openCategory === category.id && <span className="selected-label">{selectedBranch}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <div className="products-grid">{productsToShow.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || detail.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div>
+              {canShowProducts ? (productsToShow.length ? <div className="products-grid">{productsToShow.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || detail.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}
             </section>;
           })}
         </div>
