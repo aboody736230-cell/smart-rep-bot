@@ -63,7 +63,6 @@ export default function Home() {
     const isClosing = openCategory === category.id;
     setOpenCategory(isClosing ? null : category.id);
     setActiveSubcategory('');
-    if (!isClosing) sectionRefs.current[category.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const chooseImage = (event) => {
