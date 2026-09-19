@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 
 const domains = {
   SHEIN: ['shein.com', 'us.shein.com', 'ar.shein.com'],
-  Amazon: ['amazon.com', 'amazon.sa', 'amazon.ae', 'amazon.co.uk'],
+  Amazon: ['amazon.com', 'amazon.sa', 'amazon.ae', 'amazon.co.uk', 'amazon.ca', 'amazon.de', 'amazon.fr', 'amazon.it', 'amazon.es', 'amazon.in', 'amazon.com.tr'],
   Temu: ['temu.com'],
   AliExpress: ['aliexpress.com'],
   'نون': ['noon.com'],
@@ -15,7 +15,7 @@ const domains = {
 
 const affiliateDomains = {
   SHEIN: ['shein.top'],
-  Amazon: ['amzn.to', 'amzn.eu'],
+  Amazon: ['amzn.to', 'amzn.eu', 'a.co'],
   Temu: ['share.temu.com'],
   AliExpress: ['s.click.aliexpress.com', 'a.aliexpress.com'],
   'نون': [],
@@ -51,17 +51,35 @@ function meta($, property) {
 
 function priceFromDocument($, html) {
   const metaPrice = meta($, 'product:price:amount') || meta($, 'og:price:amount') || $('[itemprop="price"]').first().attr('content') || $('[data-price]').first().attr('data-price') || '';
-  if (metaPrice) return metaPrice;
+  if (metaPrice && /\d/.test(metaPrice)) return metaPrice.replace(',', '.');
+  const amazonWhole = $('.a-price-whole').first().text().replace(/[^0-9]/g, '');
+  const amazonFraction = $('.a-price-fraction').first().text().replace(/[^0-9]/g, '');
+  if (amazonWhole) return `${amazonWhole}.${(amazonFraction || '00').padStart(2, '0').slice(0, 2)}`;
   const patterns = [
-    /(?:salePrice|finalPrice|currentPrice|discountPrice|retailPrice|sale_price)["']?\s*[:=]\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
-    /["'](?:price|amount)["']\s*:\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
-    /(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:salePrice|finalPrice|currentPrice|discountPrice|retailPrice|sale_price|priceAmount|priceToPay|buyingPrice|displayPrice)["']?\s*[:=]\s*(?:\{[^}]{0,120})?["']?\s*(?:SAR|USD|AED|GBP|EUR|ريال|ر\.س|\$|£|€)?\s*(\d+(?:[.,]\d+)?)/gi,
+    /["'](?:price|amount)["']\s*:\s*["']?\s*(?:SAR|USD|AED|GBP|EUR|ريال|ر\.س|\$|£|€)\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:SAR|USD|AED|GBP|EUR|ريال|ر\.س|\$|£|€)\s*(\d+(?:[.,]\d+)?)/gi,
   ];
   for (const pattern of patterns) {
     const match = pattern.exec(html);
     if (match?.[1]) return match[1].replace(',', '.');
   }
   return '';
+}
+
+function currencyFromHost(hostname) {
+  if (hostname.endsWith('amazon.sa')) return 'SAR';
+  if (hostname.endsWith('amazon.ae')) return 'AED';
+  if (hostname.endsWith('amazon.co.uk')) return 'GBP';
+  if (hostname.endsWith('amazon.de') || hostname.endsWith('amazon.fr') || hostname.endsWith('amazon.it') || hostname.endsWith('amazon.es')) return 'EUR';
+  if (hostname.endsWith('amazon.ca')) return 'CAD';
+  if (hostname.endsWith('amazon.in')) return 'INR';
+  if (hostname.endsWith('amazon.com.tr')) return 'TRY';
+  return 'USD';
+}
+
+function currencyFromDocument($, html, fallback) {
+  return meta($, 'product:price:currency') || $('[itemprop="priceCurrency"]').first().attr('content') || (html.match(/(?:currencyCode|currency|priceCurrency)["']?\s*[:=]\s*["']?(SAR|AED|USD|GBP|EUR|CAD|INR|TRY)/i)?.[1] || fallback);
 }
 
 export async function POST(request) {
@@ -76,7 +94,7 @@ export async function POST(request) {
   if (!acceptedInitialDomains.some((domain) => isAllowedHost(target.hostname, [domain]))) return NextResponse.json({ error: `الرابط لا يبدو تابعًا لمتجر ${store} أو رابط عمولة معروف له.` }, { status: 400 });
 
   try {
-    const response = await fetch(target, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+    const response = await fetch(target, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(20000), cache: 'no-store' });
     if (!response.ok) return NextResponse.json({ error: `المتجر أعاد الحالة ${response.status}. قد يمنع السحب أو يحتاج موصلًا رسميًا.` }, { status: 502 });
     const finalUrl = new URL(response.url || target.toString());
     if (!domains[store]?.some((domain) => isAllowedHost(finalUrl.hostname, [domain]))) return NextResponse.json({ error: 'تم تحويل رابط العمولة إلى نطاق غير متوقع، لذلك أوقفنا السحب للحماية.' }, { status: 400 });
@@ -88,14 +106,14 @@ export async function POST(request) {
     let title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
     let description = firstValue(product.description) || meta($, 'og:description') || $('meta[name="description"]').attr('content')?.trim() || '';
     let price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, html);
-    let currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || 'SAR';
+    let currency = firstValue(offers.priceCurrency) || currencyFromDocument($, html, store === 'Amazon' ? currencyFromHost(finalUrl.hostname) : '');
 
-    const linkedProductUrl = $('#url').attr('value') || '';
+    const linkedProductUrl = $('#url').attr('value') || $('input[name="url"]').attr('value') || '';
     if (!price && linkedProductUrl) {
       try {
         const detailUrl = new URL(linkedProductUrl.replaceAll('&amp;', '&'));
         if (domains[store]?.some((domain) => isAllowedHost(detailUrl.hostname, [domain]))) {
-          const detailResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+          const detailResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(20000), cache: 'no-store' });
           if (detailResponse.ok) {
             const detailHtml = await detailResponse.text();
             $ = cheerio.load(detailHtml);
@@ -105,15 +123,15 @@ export async function POST(request) {
             title = title || firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
             description = firstValue(product.description) || meta($, 'og:description') || description;
             price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, detailHtml);
-            currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || currency;
+            currency = firstValue(offers.priceCurrency) || currencyFromDocument($, detailHtml, currency);
           }
         }
       } catch {}
     }
-    if (!title && !image && !price) return NextResponse.json({ error: 'لم نستطع استخراج بيانات المنتج. هذا المتجر قد يحتاج موصلًا رسميًا أو صفحة المنتج محمّلة بجافاسكربت.' }, { status: 422 });
+    if (!title && !image && !price) return NextResponse.json({ error: 'لم نستطع استخراج بيانات المنتج. قد يكون أمازون حاجبًا للطلبات المباشرة أو يحتاج صفحة محمّلة بجافاسكربت.' }, { status: 422 });
 
-    return NextResponse.json({ product: { title: title || 'منتج بدون اسم', description, price: price ? `${price} ${currency}` : 'غير متوفر', image, url: target.toString(), store, category, branch: branch || 'بدون فرع', status: 'مسودة' } });
+    return NextResponse.json({ product: { title: title || 'منتج بدون اسم', description, price: price ? `${price}${currency ? ` ${currency}` : ''}` : 'غير متوفر', image, url: target.toString(), store, category, branch: branch || 'بدون فرع', status: 'مسودة' } });
   } catch (error) {
-    return NextResponse.json({ error: error?.name === 'TimeoutError' ? 'انتهى وقت الاتصال بالمتجر.' : 'تعذر الوصول إلى صفحة المنتج. قد يكون المتجر حاجبًا للطلبات المباشرة.' }, { status: 502 });
+    return NextResponse.json({ error: error?.name === 'TimeoutError' ? 'انتهى وقت الاتصال بأمازون.' : 'تعذر الوصول إلى صفحة المنتج. قد يكون المتجر حاجبًا للطلبات المباشرة.' }, { status: 502 });
   }
 }
