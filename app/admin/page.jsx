@@ -10,6 +10,7 @@ const categories = [
   { name: 'الشنط', branches: ['شنط كتف', 'شنط سهرات', 'شنط يد'] },
   { name: 'العناية والجمال', branches: ['مكياج وتجميل', 'العناية بالشعر', 'العناية بالبشرة'] },
   { name: 'العطور', branches: [] },
+  { name: 'الأطفال', branches: ['مواليد', 'بناتي', 'ولادي'] },
 ];
 
 export default function AdminPage() {
