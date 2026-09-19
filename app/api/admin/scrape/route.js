@@ -157,6 +157,11 @@ export async function POST(request) {
       }
     }
 
+    if (store === 'Amazon' && !image) {
+      const asin = amazonAsin(finalUrl.toString()) || amazonAsin(target.toString());
+      if (asin) image = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg`;
+    }
+
     const linkedProductUrl = $('#url').attr('value') || $('input[name="url"]').attr('value') || '';
     if (!price && linkedProductUrl) {
       try {
