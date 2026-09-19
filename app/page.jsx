@@ -68,6 +68,7 @@ export default function Home() {
   const [currency, setCurrency] = useState('SOURCE');
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
+  const subcategoryRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -95,6 +96,12 @@ export default function Home() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!openCategory) return undefined;
+    const timer = window.setTimeout(() => subcategoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+    return () => window.clearTimeout(timer);
+  }, [openCategory]);
 
   const selectCategory = (category) => {
     const isClosing = openCategory === category.id;
@@ -152,7 +159,7 @@ export default function Home() {
           {categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}
         </nav>
 
-        {openCategory && activeCategory && <div className="subcategory-panel"><div className="subcategory-heading"><span>{activeCategory.subcategories.length ? `فروع ${activeCategory.name}` : activeCategory.name}</span><span className="subcategory-count">{activeCategory.subcategories.length ? 'اختر الفرع' : 'المنتجات'}</span></div>{activeCategory.subcategories.length > 0 && <div className="subcategory-list">{activeCategory.subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}{activeSubcategory || activeCategory.subcategories.length === 0 ? (activeProducts.length ? <div className="branch-products-grid">{activeProducts.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || activeDetail?.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}</div>}
+        {openCategory && activeCategory && <div ref={subcategoryRef} className="subcategory-panel"><div className="subcategory-heading"><span>{activeCategory.subcategories.length ? `فروع ${activeCategory.name}` : activeCategory.name}</span><span className="subcategory-count">{activeCategory.subcategories.length ? 'اختر الفرع' : 'المنتجات'}</span></div>{activeCategory.subcategories.length > 0 && <div className="subcategory-list">{activeCategory.subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}{activeSubcategory || activeCategory.subcategories.length === 0 ? (activeProducts.length ? <div className="branch-products-grid">{activeProducts.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || activeDetail?.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}</div>}
 
       </div>
     </main>
