@@ -85,6 +85,9 @@ export default function Home() {
   }, []);
 
   const visibleCategories = openCategory ? categories.filter((category) => category.id === openCategory) : categories;
+  const activeCategory = categories.find((category) => category.id === openCategory);
+  const activeDetail = activeCategory ? categoryDetails[activeCategory.id] : null;
+  const activeProducts = activeCategory ? publishedProducts.filter((product) => product.category === activeCategory.name && (!activeSubcategory || product.branch === activeSubcategory)) : [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -149,23 +152,8 @@ export default function Home() {
           {categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}
         </nav>
 
-        {openCategory && categories.find((category) => category.id === openCategory)?.subcategories.length > 0 && <div className={`subcategory-panel ${openCategory === 'kids' ? 'kids-subcategory-panel' : ''}`}><div className="subcategory-heading"><span>فروع {categories.find((category) => category.id === openCategory).name}</span><span className="subcategory-count">اختر الفرع</span></div><div className="subcategory-list">{categories.find((category) => category.id === openCategory).subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeChildBranch === subcategory || activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => { setActiveChildBranch(subcategory); setActiveSubcategory(childSubcategories[subcategory] ? '' : subcategory); }}>{subcategory}</button>)}</div>{openCategory === 'kids' && activeChildBranch && childSubcategories[activeChildBranch] && <div className="kids-subcategory-list"><span>اختيارات {activeChildBranch}</span>{childSubcategories[activeChildBranch].map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div>}</div>}
+        {openCategory && activeCategory && <div className="subcategory-panel"><div className="subcategory-heading"><span>{activeCategory.subcategories.length ? `فروع ${activeCategory.name}` : activeCategory.name}</span><span className="subcategory-count">{activeCategory.subcategories.length ? 'اختر الفرع' : 'المنتجات'}</span></div>{activeCategory.subcategories.length > 0 && <div className="subcategory-list">{activeCategory.subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}{activeSubcategory || activeCategory.subcategories.length === 0 ? (activeProducts.length ? <div className="branch-products-grid">{activeProducts.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || activeDetail?.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}</div>}
 
-        <div className="sections-list">
-          {visibleCategories.map((category) => {
-            const detail = categoryDetails[category.id];
-            const slideIndex = sectionSlides[category.id];
-            const selectedBranch = activeSubcategory;
-            const categoryProducts = publishedProducts.filter((product) => product.category === category.name && (!selectedBranch || product.branch === selectedBranch));
-            const canShowProducts = openCategory === category.id && (selectedBranch || category.subcategories.length === 0);
-            const productsToShow = canShowProducts ? categoryProducts : [];
-            return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
-              <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{selectedBranch && openCategory === category.id && <span className="selected-label">{selectedBranch}</span>}</div>
-              <p className="section-description">{detail.desc}</p>
-              {canShowProducts ? (productsToShow.length ? <div className="products-grid">{productsToShow.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || detail.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}
-            </section>;
-          })}
-        </div>
       </div>
     </main>
   );
