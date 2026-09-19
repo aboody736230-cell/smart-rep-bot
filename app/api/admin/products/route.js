@@ -22,7 +22,7 @@ function toClient(row) {
 
 export async function GET(request) {
   if (unauthorized(request)) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
-  const response = await supabaseRequest('?select=id,name,price,image_url,description,affiliate_url,store,category,branch,status&company_id=eq.1&order=created_at.desc&limit=100');
+  const response = await supabaseRequest('?select=id,name,price,image_url,description,affiliate_url,store,category,branch,status&order=created_at.desc&limit=100');
   if (!response.ok) return NextResponse.json({ error: 'تعذر قراءة المنتجات من Supabase.' }, { status: 502 });
   const rows = await response.json();
   return NextResponse.json({ products: rows.map(toClient) });
@@ -32,7 +32,7 @@ export async function POST(request) {
   if (unauthorized(request)) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
   const body = await request.json().catch(() => ({}));
   if (!body.title || !body.price || !body.image || !body.url || !body.store || !body.category) return NextResponse.json({ error: 'بيانات المنتج ناقصة.' }, { status: 400 });
-  const response = await supabaseRequest('', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ company_id: 1, name: body.title, price: Number.parseFloat(String(body.price).replace(/[^0-9.]/g, '')) || 0, image_url: body.image, description: body.description || '', affiliate_url: body.url, store: body.store, category: body.category, branch: body.branch || 'بدون فرع', status: 'draft' }) });
+  const response = await supabaseRequest('', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name: body.title, price: Number.parseFloat(String(body.price).replace(/[^0-9.]/g, '')) || 0, image_url: body.image, description: body.description || '', affiliate_url: body.url, store: body.store, category: body.category, branch: body.branch || 'بدون فرع', status: 'draft' }) });
   if (!response.ok) return NextResponse.json({ error: 'تعذر حفظ المنتج في Supabase.' }, { status: 502 });
   const rows = await response.json();
   return NextResponse.json({ product: toClient(rows[0]) }, { status: 201 });
@@ -47,7 +47,7 @@ export async function PATCH(request) {
   if (body.price !== undefined) patch.price = Number.parseFloat(String(body.price).replace(/[^0-9.]/g, '')) || 0;
   if (body.status !== undefined) patch.status = body.status === 'منشور' || body.status === 'published' ? 'published' : 'draft';
   patch.updated_at = new Date().toISOString();
-  const response = await supabaseRequest(`?id=eq.${encodeURIComponent(body.id)}&company_id=eq.1`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) });
+  const response = await supabaseRequest(`?id=eq.${encodeURIComponent(body.id)}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(patch) });
   if (!response.ok) return NextResponse.json({ error: 'تعذر تحديث المنتج في Supabase.' }, { status: 502 });
   const rows = await response.json();
   return NextResponse.json({ product: rows[0] ? toClient(rows[0]) : null });
@@ -57,7 +57,7 @@ export async function DELETE(request) {
   if (unauthorized(request)) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
   const body = await request.json().catch(() => ({}));
   if (!body.id) return NextResponse.json({ error: 'معرّف المنتج مطلوب.' }, { status: 400 });
-  const response = await supabaseRequest(`?id=eq.${encodeURIComponent(body.id)}&company_id=eq.1`, { method: 'DELETE' });
+  const response = await supabaseRequest(`?id=eq.${encodeURIComponent(body.id)}`, { method: 'DELETE' });
   if (!response.ok) return NextResponse.json({ error: 'تعذر حذف المنتج من Supabase.' }, { status: 502 });
   return NextResponse.json({ ok: true });
 }
