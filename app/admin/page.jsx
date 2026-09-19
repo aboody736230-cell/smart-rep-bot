@@ -12,9 +12,7 @@ const categories = [
   { name: 'العطور', branches: [] },
 ];
 
-const initialProducts = [
-  { id: 1, title: 'منتج تجريبي — سيظهر هنا بعد السحب', store: 'SHEIN', category: 'الأحذية', branch: 'أحذية رياضية', price: '—', status: 'مسودة', image: '' },
-];
+const initialProducts = [];
 
 export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -36,6 +34,11 @@ export default function AdminPage() {
   useEffect(() => {
     fetch('/api/admin/session').then((response) => response.json()).then((data) => setLoggedIn(data.authenticated === true)).catch(() => setLoggedIn(false)).finally(() => setCheckingSession(false));
   }, []);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    fetch('/api/admin/products').then((response) => response.json()).then((data) => { if (Array.isArray(data.products)) setProducts(data.products); else if (data.error) setNotice(data.error); }).catch(() => setNotice('تعذر الاتصال بقاعدة المنتجات.'));
+  }, [loggedIn]);
 
   const login = async (event) => {
     event.preventDefault();
@@ -71,29 +74,38 @@ export default function AdminPage() {
     setNotice('تم سحب البيانات إلى الحقول. راجعها وعدّلها ثم اضغط «إضافة إلى المتجر».');
   };
 
-  const addProductToStore = (event) => {
+  const addProductToStore = async (event) => {
     event.preventDefault();
     if (!productUrl.trim() || !productDraft.title.trim() || !productDraft.price.trim() || !productDraft.image.trim()) {
       setNotice('أكمل رابط العمولة واسم المنتج والسعر ورابط الصورة أولًا.');
       return;
     }
-    setProducts((current) => [{ id: Date.now(), title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch, status: 'مسودة' }, ...current]);
+    const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setNotice(data.error || 'تعذر حفظ المنتج.'); return; }
+    setProducts((current) => [data.product, ...current]);
     setProductUrl('');
     setProductDraft({ title: '', price: '', image: '', description: '' });
     setNotice(`تمت إضافة المنتج إلى ${category} / ${branch} كمسودة. يمكنك مراجعته من قائمة المنتجات.`);
   };
 
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
+    const response = await fetch('/api/admin/products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    if (!response.ok) { setNotice('تعذر حذف المنتج من قاعدة البيانات.'); return; }
     setProducts((current) => current.filter((product) => product.id !== id));
     setNotice('تم حذف المنتج من قائمة العرض الحالية.');
   };
 
-  const publishProduct = (id) => {
+  const publishProduct = async (id) => {
+    const response = await fetch('/api/admin/products', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'published' }) });
+    if (!response.ok) { setNotice('تعذر نشر المنتج في قاعدة البيانات.'); return; }
     setProducts((current) => current.map((product) => product.id === id ? { ...product, status: 'منشور' } : product));
     setNotice('تم نشر المنتج في العرض الحالي.');
   };
 
-  const saveEdit = (id, field, value) => {
+  const saveEdit = async (id, field, value) => {
+    const response = await fetch('/api/admin/products', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, [field]: value }) });
+    if (!response.ok) { setNotice('تعذر حفظ التعديل في قاعدة البيانات.'); return; }
     setProducts((current) => current.map((product) => product.id === id ? { ...product, [field]: value } : product));
     setEditingId(null);
     setNotice('تم حفظ التعديل في العرض الحالي.');

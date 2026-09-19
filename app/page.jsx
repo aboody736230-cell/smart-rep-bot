@@ -38,6 +38,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageSearchMessage, setImageSearchMessage] = useState('');
+  const [publishedProducts, setPublishedProducts] = useState([]);
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -45,6 +46,10 @@ export default function Home() {
   useEffect(() => {
     const timer = setInterval(() => setHeroIndex((index) => (index + 1) % heroSlides.length), 4500);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/store/products').then((response) => response.json()).then((data) => setPublishedProducts(Array.isArray(data.products) ? data.products : [])).catch(() => setPublishedProducts([]));
   }, []);
 
   useEffect(() => {
@@ -98,11 +103,14 @@ export default function Home() {
           {categories.map((category) => {
             const detail = categoryDetails[category.id];
             const slideIndex = sectionSlides[category.id];
+            const liveProduct = publishedProducts.find((product) => product.category === category.name);
+            const displayedProduct = liveProduct ? { ...detail.product, title: liveProduct.title, price: liveProduct.price, store: liveProduct.store } : detail.product;
+            const displayedImage = liveProduct?.image || detail.image;
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
               <button type="button" className={`section-banner ${activeBanner === category.id ? 'section-banner-active' : ''}`} onClick={() => { setOpenCategory(category.id); setActiveBanner(category.id); categoriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><div><span className="banner-category-name">{category.icon} {detail.title}</span><span>مختارات كادل</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
-              <article className="product-card"><div className="product-information"><span className="store-label">{detail.product.store}</span><h3>{detail.product.title}</h3><p className="product-price">{detail.product.price}</p><div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={detail.image} alt={detail.product.title} /></div></article>
+              <article className="product-card"><div className="product-information"><span className="store-label">{displayedProduct.store}</span><h3>{displayedProduct.title}</h3><p className="product-price">{displayedProduct.price}</p><div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={displayedImage} alt={displayedProduct.title} /></div></article>
             </section>;
           })}
         </div>
