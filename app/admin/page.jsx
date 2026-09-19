@@ -56,14 +56,19 @@ export default function AdminPage() {
     setBranch(next.branches[0] || 'بدون فرع');
   };
 
-  const startScrape = (event) => {
+  const startScrape = async (event) => {
     event.preventDefault();
     if (!productUrl.trim()) {
       setNotice('ألصق رابط المنتج أولًا.');
       return;
     }
-    setNotice(`تم تجهيز الرابط للسحب من ${store}. محرك السحب الحقيقي يحتاج ربط API/موصل المتجر في الخطوة التالية.`);
+    setNotice(`جارٍ السحب من ${store}...`);
+    const response = await fetch('/api/admin/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: productUrl, store, category, branch }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setNotice(data.error || 'تعذر سحب المنتج.'); return; }
+    setProducts((current) => [{ id: Date.now(), ...data.product }, ...current]);
     setProductUrl('');
+    setNotice(`تم سحب المنتج وإضافته إلى ${category} / ${branch}. راجعه قبل النشر.`);
   };
 
   const deleteProduct = (id) => {
