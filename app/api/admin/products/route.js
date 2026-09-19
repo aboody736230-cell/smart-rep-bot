@@ -22,7 +22,7 @@ function toClient(row) {
 
 export async function GET(request) {
   if (unauthorized(request)) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 });
-  const response = await supabaseRequest('?select=id,name,price,price_text,image_url,description,affiliate_url,store,category,branch,status&order=created_at.desc&limit=500');
+  const response = await supabaseRequest('?select=id,name,price,price_text,image_url,description,affiliate_url,store,category,branch,status&order=created_at.desc&limit=5000');
   if (!response.ok) return NextResponse.json({ error: 'تعذر قراءة المنتجات من Supabase.' }, { status: 502 });
   const rows = await response.json();
   return NextResponse.json({ products: rows.map(toClient) });
