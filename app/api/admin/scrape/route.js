@@ -83,12 +83,18 @@ function currencyFromDocument($, html, fallback) {
 }
 
 function amazonAsin(value) {
-  return String(value || '').match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1] || '';
+  return String(value || '').match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=|\/)([A-Z0-9]{10})(?:[/?&#]|$)/i)?.[1] || '';
 }
 
 function amazonProductFields($) {
   const title = $('#productTitle').first().text().trim();
-  const image = $('#landingImage').attr('data-old-hires') || $('#landingImage').attr('src') || $('#imgBlkFront').attr('src') || '';
+  const landingImage = $('#landingImage').first();
+  let dynamicImage = '';
+  try {
+    const images = JSON.parse(landingImage.attr('data-a-dynamic-image') || '{}');
+    dynamicImage = Object.entries(images).sort((a, b) => (Number(b[1]?.[0] || 0) * Number(b[1]?.[1] || 0)) - (Number(a[1]?.[0] || 0) * Number(a[1]?.[1] || 0)))[0]?.[0] || '';
+  } catch {}
+  const image = landingImage.attr('data-old-hires') || dynamicImage || landingImage.attr('src') || $('#imgBlkFront').attr('src') || $('meta[property="og:image"]').attr('content') || '';
   const priceText = $('#corePriceDisplay_desktop_feature_div .a-offscreen, #corePrice_desktop .a-offscreen, #priceblock_ourprice, #priceblock_dealprice, .a-price .a-offscreen').first().text().trim();
   return { title, image, priceText };
 }
@@ -106,7 +112,9 @@ export async function POST(request) {
 
   try {
     const isAmazon = store === 'Amazon';
-    const response = await fetch(target, { headers: { 'User-Agent': isAmazon ? 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36' : 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(isAmazon ? 10000 : 20000), cache: 'no-store' });
+    const asin = isAmazon ? amazonAsin(target.toString()) : '';
+    const directAmazonUrl = asin && !domains.Amazon.some((domain) => isAllowedHost(target.hostname, [domain])) ? new URL(`https://www.amazon.com/gp/aw/d/${asin}`) : target;
+    const response = await fetch(directAmazonUrl, { headers: { 'User-Agent': isAmazon ? 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36' : 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(isAmazon ? 8000 : 20000), cache: 'no-store' });
     if (!response.ok) return NextResponse.json({ error: `المتجر أعاد الحالة ${response.status}. قد يمنع السحب أو يحتاج موصلًا رسميًا.` }, { status: 502 });
     const finalUrl = new URL(response.url || target.toString());
     if (!domains[store]?.some((domain) => isAllowedHost(finalUrl.hostname, [domain]))) return NextResponse.json({ error: 'تم تحويل رابط العمولة إلى نطاق غير متوقع، لذلك أوقفنا السحب للحماية.' }, { status: 400 });
