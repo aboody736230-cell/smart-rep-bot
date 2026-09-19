@@ -34,6 +34,13 @@ function fitProductImage(event) {
   if (image.naturalWidth && image.naturalHeight) image.parentElement.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
 }
 
+function formatPrice(value, currency) {
+  const normalized = String(value ?? '').replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '');
+  const amount = Number.parseFloat(normalized);
+  if (!Number.isFinite(amount)) return value || 'غير محدد';
+  return currency === 'USD' ? `${(amount / 3.75).toFixed(2)} $` : `${amount.toFixed(2)} رس`;
+}
+
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [sectionSlides, setSectionSlides] = useState(Object.fromEntries(categories.map(({ id }) => [id, 0])));
@@ -44,6 +51,7 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageSearchMessage, setImageSearchMessage] = useState('');
   const [publishedProducts, setPublishedProducts] = useState([]);
+  const [currency, setCurrency] = useState('SAR');
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -90,6 +98,7 @@ export default function Home() {
             <button type="button" className="camera-button" onClick={() => fileInputRef.current?.click()} aria-label="البحث بالصورة"><Camera aria-hidden="true" /></button>
             <input ref={fileInputRef} className="hidden-file-input" type="file" accept="image/*" onChange={chooseImage} />
           </div>
+          <div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div>
         </header>
         {selectedImage && <div className="image-search-status"><ImageIcon aria-hidden="true" /><span>تم اختيار صورة للبحث</span><button type="button" onClick={() => { setSelectedImage(null); setImageSearchMessage(''); }}>إزالة</button></div>}
         {imageSearchMessage && <p className="image-search-message">{imageSearchMessage}</p>}
@@ -114,7 +123,7 @@ export default function Home() {
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <div className="products-grid">{productsToShow.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{product.price}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}<div className="product-footer"><span className="product-rating">اختيار مميز</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={product.image || detail.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div>
+              <div className="products-grid">{productsToShow.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}<div className="product-footer"><span className="product-rating">اختيار مميز</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={product.image || detail.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div>
             </section>;
           })}
         </div>
