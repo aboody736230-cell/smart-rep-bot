@@ -103,7 +103,7 @@ export async function POST(request) {
             product = collectJsonLd($);
             offers = product.offers || {};
             image = firstValue(product.image) || meta($, 'og:image') || meta($, 'twitter:image') || image;
-            title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim() || title;
+            title = title || firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
             description = firstValue(product.description) || meta($, 'og:description') || description;
             price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, detailHtml);
             currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || currency;
