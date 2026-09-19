@@ -147,11 +147,7 @@ export default function Home() {
           <Dots count={storeNames.length} active={storeBannerIndex} />
         </section>
 
-        <nav ref={categoriesRef} className="categories" aria-label="أقسام المتجر">
-          {categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}
-        </nav>
-
-        <section className="lady-intro lady-banner" aria-label="رسالة كادل للسيدات"><span className="lady-intro-line" /><div><strong>لكِ أنتِ سيدتي</strong><p>انتقينا لكِ تشكيلة واسعة بعناية وبحب</p></div><span className="lady-intro-line" /></section>
+        <section className="lady-intro lady-banner" aria-label="رسالة كادل للسيدات"><span className="lady-intro-line" /><div><strong>لكِ أنتِ سيدتي</strong><p>انتقينا لكِ تشكيلة واسعة بعناية وبحب</p></div><span className="lady-intro-line" /><nav ref={categoriesRef} className="categories lady-categories" aria-label="أقسام المتجر">{categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}</nav></section>
 
         <section className="kids-store-section" aria-label="قسم الأطفال">
           <div className="kids-store-heading"><div><span>🧸</span><h2>قسم الأطفال</h2></div><p>اختيارات لطيفة ومريحة للصغار بكل ألوان الطفولة</p></div>
