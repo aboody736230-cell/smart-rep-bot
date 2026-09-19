@@ -37,3 +37,6 @@
 
 .currency-switch{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #dedbd5;border-radius:999px;background:#faf9f7;direction:ltr}.currency-switch button{min-width:34px;padding:6px 8px;border:0;border-radius:999px;background:transparent;color:#555;font-size:.72rem;font-weight:900}.currency-switch button.active{background:#111;color:#fff}.products-grid{align-items:start}.products-grid .product-card{height:fit-content;align-self:start}
 @media(max-width:650px){.currency-switch{align-self:center}.currency-switch button{min-width:38px;padding:7px 9px}}
+
+.products-grid .product-information h3{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;min-height:4.8em;line-height:1.6}.products-grid .product-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.products-grid .product-card{overflow:hidden}
+@media(max-width:650px){.products-grid .product-information h3{-webkit-line-clamp:3;min-height:4.2em;line-height:1.4}}
