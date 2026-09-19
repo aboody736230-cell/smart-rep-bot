@@ -105,7 +105,8 @@ export async function POST(request) {
   if (!acceptedInitialDomains.some((domain) => isAllowedHost(target.hostname, [domain]))) return NextResponse.json({ error: `الرابط لا يبدو تابعًا لمتجر ${store} أو رابط عمولة معروف له.` }, { status: 400 });
 
   try {
-    const response = await fetch(target, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(20000), cache: 'no-store' });
+    const isAmazon = store === 'Amazon';
+    const response = await fetch(target, { headers: { 'User-Agent': isAmazon ? 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36' : 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(isAmazon ? 10000 : 20000), cache: 'no-store' });
     if (!response.ok) return NextResponse.json({ error: `المتجر أعاد الحالة ${response.status}. قد يمنع السحب أو يحتاج موصلًا رسميًا.` }, { status: 502 });
     const finalUrl = new URL(response.url || target.toString());
     if (!domains[store]?.some((domain) => isAllowedHost(finalUrl.hostname, [domain]))) return NextResponse.json({ error: 'تم تحويل رابط العمولة إلى نطاق غير متوقع، لذلك أوقفنا السحب للحماية.' }, { status: 400 });
@@ -132,7 +133,7 @@ export async function POST(request) {
       if (asin) {
         try {
           const mobileUrl = `${finalUrl.origin}/gp/aw/d/${asin}`;
-          const mobileResponse = await fetch(mobileUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+          const mobileResponse = await fetch(mobileUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36', Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' }, redirect: 'follow', signal: AbortSignal.timeout(8000), cache: 'no-store' });
           if (mobileResponse.ok) {
             const mobileHtml = await mobileResponse.text();
             $ = cheerio.load(mobileHtml);
@@ -153,7 +154,7 @@ export async function POST(request) {
       try {
         const detailUrl = new URL(linkedProductUrl.replaceAll('&amp;', '&'));
         if (domains[store]?.some((domain) => isAllowedHost(detailUrl.hostname, [domain]))) {
-          const detailResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(20000), cache: 'no-store' });
+          const detailResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(store === 'Amazon' ? 8000 : 20000), cache: 'no-store' });
           if (detailResponse.ok) {
             const detailHtml = await detailResponse.text();
             $ = cheerio.load(detailHtml);
