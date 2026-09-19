@@ -105,13 +105,12 @@ export default function Home() {
             const detail = categoryDetails[category.id];
             const slideIndex = sectionSlides[category.id];
             const liveProduct = publishedProducts.find((product) => product.category === category.name && (!activeSubcategory || product.branch === activeSubcategory));
-            const displayedProduct = liveProduct ? { ...detail.product, title: liveProduct.title, price: liveProduct.price, store: liveProduct.store } : detail.product;
+            const displayedProduct = liveProduct ? { ...detail.product, title: liveProduct.title, price: liveProduct.price, store: liveProduct.store, url: liveProduct.url } : detail.product;
             const displayedImage = liveProduct?.image || detail.image;
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <button type="button" className={`section-banner ${activeBanner === category.id ? 'section-banner-active' : ''}`} onClick={() => { setOpenCategory(category.id); setActiveBanner(category.id); categoriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><div><span className="banner-category-name">{category.icon} {detail.title}</span><strong>{detail.slides[slideIndex]}</strong><small>اكتشف التشكيلة الآن ←</small></div><img src={detail.image} alt="" /><Dots count={detail.slides.length} active={slideIndex} /></button>
-              <article className="product-card"><div className="product-information"><span className="store-label">{displayedProduct.store}</span><h3>{displayedProduct.title}</h3><p className="product-price">{displayedProduct.price}</p><div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={displayedImage} alt={displayedProduct.title} /></div></article>
+              <article className="product-card"><div className="product-information"><span className="store-label">{displayedProduct.store}</span><h3>{displayedProduct.title}</h3><p className="product-price">{displayedProduct.price}</p>{displayedProduct.url && <a className="buy-product-button" href={displayedProduct.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}<div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={displayedImage} alt={displayedProduct.title} /></div></article>
             </section>;
           })}
         </div>
