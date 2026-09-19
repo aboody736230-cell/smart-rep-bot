@@ -69,6 +69,7 @@ export default function Home() {
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
   const subcategoryRef = useRef(null);
+  const kidsSectionRef = useRef(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -102,6 +103,12 @@ export default function Home() {
     const timer = window.setTimeout(() => subcategoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
     return () => window.clearTimeout(timer);
   }, [openCategory]);
+
+  useEffect(() => {
+    if (!activeChildBranch) return undefined;
+    const timer = window.setTimeout(() => kidsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+    return () => window.clearTimeout(timer);
+  }, [activeChildBranch]);
 
   const selectCategory = (category) => {
     const isClosing = openCategory === category.id;
@@ -149,7 +156,7 @@ export default function Home() {
 
         <section className="lady-intro lady-banner" aria-label="رسالة كادل للسيدات"><span className="lady-intro-line" /><div><strong>لكِ أنتِ سيدتي</strong><p>انتقينا لكِ تشكيلة واسعة بعناية وبحب</p></div><span className="lady-intro-line" /><nav ref={categoriesRef} className="categories lady-categories" aria-label="أقسام المتجر">{categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}</nav></section>
 
-        <section className="kids-store-section" aria-label="قسم الأطفال">
+        <section ref={kidsSectionRef} className="kids-store-section" aria-label="قسم الأطفال">
           <div className="kids-store-heading"><div><span>🧸</span><h2>قسم الأطفال</h2></div><p>اختيارات لطيفة ومريحة للصغار بكل ألوان الطفولة</p></div>
           <div className="kids-main-branches">{['مواليد', 'بناتي', 'ولادي'].map((branch) => <button type="button" key={branch} className={`kids-main-branch ${activeChildBranch === branch ? 'active' : ''}`} onClick={() => { setActiveChildBranch(activeChildBranch === branch ? '' : branch); setActiveSubcategory(''); }}>{branch}</button>)}</div>
           {activeChildBranch && childSubcategories[activeChildBranch] && <div className="kids-subcategory-list kids-store-subcategories"><span>اختيارات {activeChildBranch}</span>{childSubcategories[activeChildBranch].map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}
