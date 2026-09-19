@@ -81,14 +81,35 @@ export async function POST(request) {
     const finalUrl = new URL(response.url || target.toString());
     if (!domains[store]?.some((domain) => isAllowedHost(finalUrl.hostname, [domain]))) return NextResponse.json({ error: 'تم تحويل رابط العمولة إلى نطاق غير متوقع، لذلك أوقفنا السحب للحماية.' }, { status: 400 });
     const html = await response.text();
-    const $ = cheerio.load(html);
-    const product = collectJsonLd($);
-    const offers = product.offers || {};
-    const image = firstValue(product.image) || meta($, 'og:image') || meta($, 'twitter:image');
-    const title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
-    const description = firstValue(product.description) || meta($, 'og:description') || $('meta[name="description"]').attr('content')?.trim() || '';
-    const price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, html);
-    const currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || 'SAR';
+    let $ = cheerio.load(html);
+    let product = collectJsonLd($);
+    let offers = product.offers || {};
+    let image = firstValue(product.image) || meta($, 'og:image') || meta($, 'twitter:image');
+    let title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
+    let description = firstValue(product.description) || meta($, 'og:description') || $('meta[name="description"]').attr('content')?.trim() || '';
+    let price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, html);
+    let currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || 'SAR';
+
+    const linkedProductUrl = $('#url').attr('value') || '';
+    if (!price && linkedProductUrl) {
+      try {
+        const detailUrl = new URL(linkedProductUrl.replaceAll('&amp;', '&'));
+        if (domains[store]?.some((domain) => isAllowedHost(detailUrl.hostname, [domain]))) {
+          const detailResponse = await fetch(detailUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
+          if (detailResponse.ok) {
+            const detailHtml = await detailResponse.text();
+            $ = cheerio.load(detailHtml);
+            product = collectJsonLd($);
+            offers = product.offers || {};
+            image = firstValue(product.image) || meta($, 'og:image') || meta($, 'twitter:image') || image;
+            title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim() || title;
+            description = firstValue(product.description) || meta($, 'og:description') || description;
+            price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, detailHtml);
+            currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || currency;
+          }
+        }
+      } catch {}
+    }
     if (!title && !image && !price) return NextResponse.json({ error: 'لم نستطع استخراج بيانات المنتج. هذا المتجر قد يحتاج موصلًا رسميًا أو صفحة المنتج محمّلة بجافاسكربت.' }, { status: 422 });
 
     return NextResponse.json({ product: { title: title || 'منتج بدون اسم', description, price: price ? `${price} ${currency}` : 'غير متوفر', image, url: target.toString(), store, category, branch: branch || 'بدون فرع', status: 'مسودة' } });
