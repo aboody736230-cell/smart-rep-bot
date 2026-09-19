@@ -49,6 +49,21 @@ function meta($, property) {
   return $(`meta[property="${property}"], meta[name="${property}"]`).first().attr('content')?.trim() || '';
 }
 
+function priceFromDocument($, html) {
+  const metaPrice = meta($, 'product:price:amount') || meta($, 'og:price:amount') || $('[itemprop="price"]').first().attr('content') || $('[data-price]').first().attr('data-price') || '';
+  if (metaPrice) return metaPrice;
+  const patterns = [
+    /(?:salePrice|finalPrice|currentPrice|discountPrice|price)["']?\s*[:=]\s*["']?\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:amount|value)["']?\s*[:=]\s*["']?\s*(\d+(?:[.,]\d+)?)/gi,
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(html);
+    if (match?.[1]) return match[1].replace(',', '.');
+  }
+  const visiblePrice = $('[itemprop="price"], .price, [class*="price"], [class*="Price"]').first().text().match(/\d+(?:[.,]\d+)?/);
+  return visiblePrice?.[0]?.replace(',', '.') || '';
+}
+
 export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const { url, store, category, branch } = body;
@@ -72,7 +87,7 @@ export async function POST(request) {
     const image = firstValue(product.image) || meta($, 'og:image') || meta($, 'twitter:image');
     const title = firstValue(product.name) || meta($, 'og:title') || $('title').first().text().trim();
     const description = firstValue(product.description) || meta($, 'og:description') || $('meta[name="description"]').attr('content')?.trim() || '';
-    const price = firstValue(offers.price) || firstValue(offers.lowPrice) || meta($, 'product:price:amount') || '';
+    const price = firstValue(offers.price) || firstValue(offers.lowPrice) || priceFromDocument($, html);
     const currency = firstValue(offers.priceCurrency) || meta($, 'product:price:currency') || 'SAR';
     if (!title && !image && !price) return NextResponse.json({ error: 'لم نستطع استخراج بيانات المنتج. هذا المتجر قد يحتاج موصلًا رسميًا أو صفحة المنتج محمّلة بجافاسكربت.' }, { status: 422 });
 
