@@ -26,3 +26,5 @@
 .delete-store-button{display:inline-flex!important;align-items:center;gap:5px;width:auto!important;padding:0 8px!important;background:#fff4f5!important;border-color:#f2b7c0!important;color:#c45d6c!important;font-size:.7rem}.delete-store-button span{white-space:nowrap}.empty-products{padding:30px!important;text-align:center;color:#8b9a9f}
 
 .section-banner img{object-fit:contain;object-position:center;background:#fff;opacity:1}.product-image-wrapper{place-items:center;background:#fff}.product-image-wrapper img{object-fit:contain;object-position:center;display:block;image-rendering:auto}.product-footer{border-top-color:#000}
+
+.section-description{color:#30343a}.product-information h3{color:#111827;font-weight:900}.product-price{color:#111827}.product-rating{color:#2f3438}
