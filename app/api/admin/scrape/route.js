@@ -53,7 +53,7 @@ function priceFromDocument($, html) {
   const metaPrice = meta($, 'product:price:amount') || meta($, 'og:price:amount') || $('[itemprop="price"]').first().attr('content') || $('[data-price]').first().attr('data-price') || '';
   if (metaPrice) return metaPrice;
   const patterns = [
-    /(?:salePrice|finalPrice|currentPrice|discountPrice|retailPrice|sale_price)["']?\s*[:=]\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)?\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:salePrice|finalPrice|currentPrice|discountPrice|retailPrice|sale_price)["']?\s*[:=]\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
     /["'](?:price|amount)["']\s*:\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
     /(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
   ];
@@ -61,8 +61,7 @@ function priceFromDocument($, html) {
     const match = pattern.exec(html);
     if (match?.[1]) return match[1].replace(',', '.');
   }
-  const visiblePrice = $('[itemprop="price"], .price, [class*="price"], [class*="Price"]').first().text().match(/\d+(?:[.,]\d+)?/);
-  return visiblePrice?.[0]?.replace(',', '.') || '';
+  return '';
 }
 
 export async function POST(request) {
