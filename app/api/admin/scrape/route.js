@@ -13,6 +13,16 @@ const domains = {
   'ترينديول': ['trendyol.com'],
 };
 
+const affiliateDomains = {
+  SHEIN: ['shein.top'],
+  Amazon: ['amzn.to', 'amzn.eu'],
+  Temu: ['share.temu.com'],
+  AliExpress: ['s.click.aliexpress.com', 'a.aliexpress.com'],
+  'نون': [],
+  'نمشي': [],
+  'ترينديول': ['ty.gl'],
+};
+
 function isAllowedHost(hostname, allowed) {
   return allowed.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 }
@@ -47,11 +57,14 @@ export async function POST(request) {
   let target;
   try { target = new URL(url); } catch { return NextResponse.json({ error: 'رابط المنتج غير صالح.' }, { status: 400 }); }
   if (!['http:', 'https:'].includes(target.protocol)) return NextResponse.json({ error: 'يسمح بروابط HTTPS وHTTP فقط.' }, { status: 400 });
-  if (!domains[store]?.some((domain) => isAllowedHost(target.hostname, [domain]))) return NextResponse.json({ error: `الرابط لا يبدو تابعًا لمتجر ${store}.` }, { status: 400 });
+  const acceptedInitialDomains = [...(domains[store] || []), ...(affiliateDomains[store] || [])];
+  if (!acceptedInitialDomains.some((domain) => isAllowedHost(target.hostname, [domain]))) return NextResponse.json({ error: `الرابط لا يبدو تابعًا لمتجر ${store} أو رابط عمولة معروف له.` }, { status: 400 });
 
   try {
     const response = await fetch(target, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; KadelProductImporter/1.0)', Accept: 'text/html,application/xhtml+xml' }, redirect: 'follow', signal: AbortSignal.timeout(15000), cache: 'no-store' });
     if (!response.ok) return NextResponse.json({ error: `المتجر أعاد الحالة ${response.status}. قد يمنع السحب أو يحتاج موصلًا رسميًا.` }, { status: 502 });
+    const finalUrl = new URL(response.url || target.toString());
+    if (!domains[store]?.some((domain) => isAllowedHost(finalUrl.hostname, [domain]))) return NextResponse.json({ error: 'تم تحويل رابط العمولة إلى نطاق غير متوقع، لذلك أوقفنا السحب للحماية.' }, { status: 400 });
     const html = await response.text();
     const $ = cheerio.load(html);
     const product = collectJsonLd($);
