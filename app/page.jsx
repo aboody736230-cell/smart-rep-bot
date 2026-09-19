@@ -29,6 +29,11 @@ function Dots({ count, active }) {
   return <div className="banner-dots" aria-hidden="true">{Array.from({ length: count }, (_, index) => <span key={index} className={index === active ? 'active' : ''} />)}</div>;
 }
 
+function fitProductImage(event) {
+  const image = event.currentTarget;
+  if (image.naturalWidth && image.naturalHeight) image.parentElement.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
+}
+
 export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [sectionSlides, setSectionSlides] = useState(Object.fromEntries(categories.map(({ id }) => [id, 0])));
@@ -110,7 +115,7 @@ export default function Home() {
             return <section key={category.id} ref={(element) => { sectionRefs.current[category.id] = element; }} className={`category-card ${activeBanner === category.id ? 'category-card-highlighted' : ''}`} id={category.id}>
               <div className="section-heading"><div className="section-title-row"><span className="section-accent"><Sparkles aria-hidden="true" /></span><h2>{detail.title}</h2></div>{activeSubcategory && openCategory === category.id && <span className="selected-label">{activeSubcategory}</span>}</div>
               <p className="section-description">{detail.desc}</p>
-              <article className="product-card"><div className="product-information"><span className="store-label">{displayedProduct.store}</span><h3>{displayedProduct.title}</h3><p className="product-price">{displayedProduct.price}</p>{displayedProduct.url && <a className="buy-product-button" href={displayedProduct.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}<div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={displayedImage} alt={displayedProduct.title} /></div></article>
+              <article className="product-card"><div className="product-information"><span className="store-label">{displayedProduct.store}</span><h3>{displayedProduct.title}</h3><p className="product-price">{displayedProduct.price}</p>{displayedProduct.url && <a className="buy-product-button" href={displayedProduct.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}<div className="product-footer"><span className="product-rating">مختار لك بعناية</span><button type="button" className="view-category-button">🔍 عرض القسم</button></div></div><div className="product-image-wrapper"><img src={displayedImage} alt={displayedProduct.title} onLoad={fitProductImage} /></div></article>
             </section>;
           })}
         </div>
