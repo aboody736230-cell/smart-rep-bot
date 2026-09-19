@@ -15,7 +15,7 @@ const domains = {
 
 const affiliateDomains = {
   SHEIN: ['shein.top'],
-  Amazon: ['amzn.to', 'amzn.eu', 'a.co'],
+  Amazon: ['amzn.to', 'amzn.eu', 'a.co', 'link.amazon'],
   Temu: ['share.temu.com'],
   AliExpress: ['s.click.aliexpress.com', 'a.aliexpress.com'],
   'نون': [],
