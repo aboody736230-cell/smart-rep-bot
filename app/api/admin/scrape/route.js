@@ -53,8 +53,9 @@ function priceFromDocument($, html) {
   const metaPrice = meta($, 'product:price:amount') || meta($, 'og:price:amount') || $('[itemprop="price"]').first().attr('content') || $('[data-price]').first().attr('data-price') || '';
   if (metaPrice) return metaPrice;
   const patterns = [
-    /(?:salePrice|finalPrice|currentPrice|discountPrice|price)["']?\s*[:=]\s*["']?\s*(\d+(?:[.,]\d+)?)/gi,
-    /(?:amount|value)["']?\s*[:=]\s*["']?\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:salePrice|finalPrice|currentPrice|discountPrice|retailPrice|sale_price)["']?\s*[:=]\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)?\s*(\d+(?:[.,]\d+)?)/gi,
+    /["'](?:price|amount)["']\s*:\s*["']?\s*(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
+    /(?:SAR|USD|ريال|ر\.س|\$)\s*(\d+(?:[.,]\d+)?)/gi,
   ];
   for (const pattern of patterns) {
     const match = pattern.exec(html);

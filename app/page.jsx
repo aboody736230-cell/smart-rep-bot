@@ -36,6 +36,7 @@ function fitProductImage(event) {
 
 function formatPrice(value, currency) {
   const original = String(value ?? '');
+  if (currency === 'SOURCE') return original || 'غير متوفر';
   const normalized = original.replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '');
   const amount = Number.parseFloat(normalized);
   if (!Number.isFinite(amount)) return value || 'غير محدد';
@@ -54,7 +55,7 @@ export default function Home() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageSearchMessage, setImageSearchMessage] = useState('');
   const [publishedProducts, setPublishedProducts] = useState([]);
-  const [currency, setCurrency] = useState('SAR');
+  const [currency, setCurrency] = useState('SOURCE');
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -116,7 +117,7 @@ export default function Home() {
         </nav>
 
         {openCategory && categories.find((category) => category.id === openCategory)?.subcategories.length > 0 && <div className="subcategory-panel"><div className="subcategory-heading"><span>فروع {categories.find((category) => category.id === openCategory).name}</span><span className="subcategory-count">اختر الفرع</span></div><div className="subcategory-list">{categories.find((category) => category.id === openCategory).subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div></div>}
-        <div className="currency-bar"><span>عرض الأسعار</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div>
+        <div className="currency-bar"><span>العملة</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SOURCE' ? 'active' : ''} onClick={() => setCurrency('SOURCE')}>الأصلي</button><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div>
 
         <div className="sections-list">
           {visibleCategories.map((category) => {
