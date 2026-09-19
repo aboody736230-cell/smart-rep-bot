@@ -101,8 +101,8 @@ export default function Home() {
             <button type="button" className="camera-button" onClick={() => fileInputRef.current?.click()} aria-label="البحث بالصورة"><Camera aria-hidden="true" /></button>
             <input ref={fileInputRef} className="hidden-file-input" type="file" accept="image/*" onChange={chooseImage} />
           </div>
-          <div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div>
         </header>
+        <div className="boutique-intro"><strong>THE BOUTIQUE</strong><span>Curated style, made for every occasion</span></div>
         {selectedImage && <div className="image-search-status"><ImageIcon aria-hidden="true" /><span>تم اختيار صورة للبحث</span><button type="button" onClick={() => { setSelectedImage(null); setImageSearchMessage(''); }}>إزالة</button></div>}
         {imageSearchMessage && <p className="image-search-message">{imageSearchMessage}</p>}
 
@@ -116,6 +116,7 @@ export default function Home() {
         </nav>
 
         {openCategory && categories.find((category) => category.id === openCategory)?.subcategories.length > 0 && <div className="subcategory-panel"><div className="subcategory-heading"><span>فروع {categories.find((category) => category.id === openCategory).name}</span><span className="subcategory-count">اختر الفرع</span></div><div className="subcategory-list">{categories.find((category) => category.id === openCategory).subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(subcategory)}>{subcategory}</button>)}</div></div>}
+        <div className="currency-bar"><span>عرض الأسعار</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div>
 
         <div className="sections-list">
           {visibleCategories.map((category) => {
