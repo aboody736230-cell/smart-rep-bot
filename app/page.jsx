@@ -19,7 +19,7 @@ const childSubcategories = {
 const storeNames = ['SHEIN', 'Amazon', 'Temu', 'AliExpress', 'نون', 'نمشي', 'ترينديول'];
 
 const heroSlides = [
-  { eyebrow: 'أهلًا بك في', title: 'متجر كادل الراقي', text: 'تجربة تسوق مختارة بعناية، تجمع الذوق والفخامة في مكان واحد.', tone: 'rose' },
+  { eyebrow: 'أهلًا بك في', title: 'Kadol Boutique', text: 'تجربة تسوق مختارة بعناية، تجمع الذوق والفخامة في مكان واحد.', tone: 'rose' },
   { eyebrow: 'اكتشف معنا', title: 'أشهر المتاجر العالمية في متجر واحد', text: 'اختيارات مميزة من مصادر موثوقة لتجد ما يناسب أسلوبك.', tone: 'sky' },
   { eyebrow: 'تسوق بذكاء', title: 'تشكيلات واسعة وأسعار مناسبة', text: 'كل ما تحبه، بتفاصيل واضحة وتجربة سهلة على الجوال والكمبيوتر.', tone: 'gold' },
 ];
