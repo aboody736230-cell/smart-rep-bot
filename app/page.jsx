@@ -35,10 +35,13 @@ function fitProductImage(event) {
 }
 
 function formatPrice(value, currency) {
-  const normalized = String(value ?? '').replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '');
+  const original = String(value ?? '');
+  const normalized = original.replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '');
   const amount = Number.parseFloat(normalized);
   if (!Number.isFinite(amount)) return value || 'غير محدد';
-  return currency === 'USD' ? `${(amount / 3.75).toFixed(2)} $` : `${amount.toFixed(2)} رس`;
+  const sourceIsUsd = /\$|usd|دولار/i.test(original);
+  const sarAmount = sourceIsUsd ? amount * 3.75 : amount;
+  return currency === 'USD' ? `${(sarAmount / 3.75).toFixed(2)} $` : `${sarAmount.toFixed(2)} رس`;
 }
 
 export default function Home() {
