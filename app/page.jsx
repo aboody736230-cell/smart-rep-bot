@@ -63,6 +63,7 @@ export default function Home() {
   const [storeBannerIndex, setStoreBannerIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [imageSearchMessage, setImageSearchMessage] = useState('');
   const [publishedProducts, setPublishedProducts] = useState([]);
   const [currency, setCurrency] = useState('SOURCE');
@@ -71,6 +72,13 @@ export default function Home() {
   const subcategoryRef = useRef(null);
   const kidsSectionRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!previewImage) return undefined;
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setPreviewImage(null); };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [previewImage]);
 
   useEffect(() => {
     const timer = setInterval(() => setHeroIndex((index) => (index + 1) % heroSlides.length), 4500);
@@ -156,7 +164,7 @@ export default function Home() {
 
         <section className="lady-intro lady-banner" aria-label="رسالة كادل للسيدات"><span className="lady-intro-line" /><div><strong>لكِ أنتِ سيدتي</strong><p>انتقينا لكِ تشكيلة واسعة بعناية وبحب</p></div><span className="lady-intro-line" /><nav ref={categoriesRef} className="categories lady-categories" aria-label="أقسام المتجر">{categories.map((category) => <button type="button" key={category.id} className={`category-pill ${activeBanner === category.id ? 'category-pill-sky' : openCategory === category.id ? 'category-pill-active' : ''}`} onClick={() => selectCategory(category)}><span>{category.name}</span><span className="category-icon">{category.icon}</span>{category.subcategories.length > 0 && <ChevronDown className={`category-chevron ${openCategory === category.id ? 'rotate' : ''}`} aria-hidden="true" />}</button>)}</nav></section>
 
-        <div ref={subcategoryRef} className={`subcategory-panel ${openCategory && activeCategory ? "subcategory-panel-open" : ""}`}><div className="subcategory-panel-content">{openCategory && activeCategory && <><div className="subcategory-heading"><span>{activeCategory.subcategories.length ? `فروع ${activeCategory.name}` : activeCategory.name}</span><span className="subcategory-count">{activeCategory.subcategories.length ? 'اختر الفرع' : 'المنتجات'}</span></div>{activeCategory.subcategories.length > 0 && <div className="subcategory-list">{activeCategory.subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}{activeSubcategory || activeCategory.subcategories.length === 0 ? (activeProducts.length ? <div className="branch-products-grid">{activeProducts.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper"><img src={product.image || activeDetail?.image} alt={product.title} onLoad={fitProductImage} /></div></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}</>}</div></div>
+        <div ref={subcategoryRef} className={`subcategory-panel ${openCategory && activeCategory ? "subcategory-panel-open" : ""}`}><div className="subcategory-panel-content">{openCategory && activeCategory && <><div className="subcategory-heading"><span>{activeCategory.subcategories.length ? `فروع ${activeCategory.name}` : activeCategory.name}</span><span className="subcategory-count">{activeCategory.subcategories.length ? 'اختر الفرع' : 'المنتجات'}</span></div>{activeCategory.subcategories.length > 0 && <div className="subcategory-list">{activeCategory.subcategories.map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}{activeSubcategory || activeCategory.subcategories.length === 0 ? (activeProducts.length ? <div className="branch-products-grid">{activeProducts.map((product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><button type="button" className="product-image-wrapper product-image-button" aria-label={`تكبير صورة ${product.title}`} onClick={() => setPreviewImage({ src: product.image || activeDetail?.image, title: product.title })}><img src={product.image || activeDetail?.image} alt={product.title} onLoad={fitProductImage} /></button></article>)}</div> : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>) : <p className="branch-prompt">اختر الفرع لعرض المنتجات</p>}</>}</div></div>
         <section ref={kidsSectionRef} className="kids-store-section" aria-label="قسم الأطفال">
           <div className="kids-store-heading"><div><span>🧸</span><h2>قسم الأطفال</h2></div><p>اختيارات لطيفة ومريحة للصغار بكل ألوان الطفولة</p></div>
           <div className="kids-main-branches">{['مواليد', 'بناتي', 'ولادي'].map((branch) => <button type="button" key={branch} className={`kids-main-branch ${activeChildBranch === branch ? 'active' : ''}`} onClick={() => { setActiveChildBranch(activeChildBranch === branch ? '' : branch); setActiveSubcategory(''); }}>{branch}</button>)}</div>
@@ -165,6 +173,7 @@ export default function Home() {
 
 
       </div>
+      {previewImage && <div className="product-preview-overlay" role="presentation" onClick={() => setPreviewImage(null)}><div className="product-preview-card" role="dialog" aria-modal="true" aria-label={previewImage.title} onClick={(event) => event.stopPropagation()}><button type="button" className="product-preview-close" aria-label="إغلاق الصورة" onClick={() => setPreviewImage(null)}>×</button><img src={previewImage.src} alt={previewImage.title} /></div></div>}
     </main>
   );
 }
