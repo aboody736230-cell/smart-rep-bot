@@ -14,6 +14,21 @@ const categories = [
   { name: 'الأطفال', branches: ['مواليد', 'بناتي', 'ولادي'] },
 ];
 
+function normalizeProductUrl(value) {
+  try {
+    const parsed = new URL(String(value || '').trim());
+    const asin = parsed.toString().match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=|\/)([A-Z0-9]{10})(?:[/?&#]|$)/i)?.[1];
+    if (asin && parsed.hostname.toLowerCase().includes('amazon')) return `amazon:${asin.toUpperCase()}`;
+    parsed.hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    parsed.hash = '';
+    parsed.pathname = parsed.pathname.replace(/\/+$/, '') || '/';
+    [...parsed.searchParams.keys()].forEach((key) => { if (/^(utm_.+|tag|ref|ref_|linkcode|camp|creative|ascsubtag|pd_rd_.+|qid|sr|crid)$/i.test(key)) parsed.searchParams.delete(key); });
+    return `${parsed.hostname}${parsed.pathname}${parsed.searchParams.toString() ? `?${[...parsed.searchParams.entries()].sort().map(([key, value]) => `${key}=${value}`).join('&')}` : ''}`;
+  } catch {
+    return String(value || '').trim().toLowerCase().replace(/\/+$/, '');
+  }
+}
+
 export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -94,7 +109,7 @@ export default function AdminPage() {
 
   const addProductToStore = async () => {
     if (!productUrl.trim() || !productDraft.title.trim() || !productDraft.price.trim() || !productDraft.image.trim()) return setNotice('أكمل رابط العمولة واسم المنتج والسعر ورابط الصورة أولًا.');
-    if (products.some((product) => product.url?.trim() === productUrl.trim())) return setNotice('هذا الرابط والمنتج موجودان من قبل داخل المتجر.');
+    if (products.some((product) => normalizeProductUrl(product.url) === normalizeProductUrl(productUrl))) return setNotice('هذا الرابط والمنتج موجودان من قبل داخل المتجر.');
     const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setNotice(data.error || 'تعذر حفظ المنتج.');
