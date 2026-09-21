@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Camera, ChevronDown, Image as ImageIcon, Search, Sparkles } from 'lucide-react';
 
 const categories = [
@@ -137,7 +138,7 @@ export default function Home() {
     <main className="store-shell" dir="rtl">
       <div className="store-container">
         <header className="store-header">
-          <div className="brand-block"><span className="brand-mark">K</span><h1>Kadel</h1><span className="brand-arabic">متجر</span></div>
+          <Link href="/" className="brand-block" aria-label="العودة إلى الصفحة الرئيسية لمتجر كادل"><span className="brand-mark">K</span><h1>Kadel</h1><span className="brand-arabic">متجر</span></Link>
           <div className="search-box">
             <Search aria-hidden="true" />
             <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="ابحث عن منتجك المفضل..." aria-label="البحث عن منتج" />
