@@ -68,6 +68,7 @@ export default function Home() {
   const [imageSearchMessage, setImageSearchMessage] = useState('');
   const [publishedProducts, setPublishedProducts] = useState([]);
   const [currency, setCurrency] = useState('SOURCE');
+  const [sortOrder, setSortOrder] = useState('default');
   const sectionRefs = useRef({});
   const categoriesRef = useRef(null);
   const subcategoryRef = useRef(null);
@@ -98,8 +99,10 @@ export default function Home() {
   const visibleCategories = openCategory ? categories.filter((category) => category.id === openCategory) : categories;
   const activeCategory = categories.find((category) => category.id === openCategory);
   const activeDetail = activeCategory ? categoryDetails[activeCategory.id] : null;
-  const activeProducts = activeCategory ? publishedProducts.filter((product) => product.category === activeCategory.name && (!activeSubcategory || product.branch === activeSubcategory)) : [];
-  const searchResults = searchQuery.trim() ? publishedProducts.filter((product) => [product.title, product.description, product.store, product.category, product.branch].filter(Boolean).join(' ').toLocaleLowerCase('ar').includes(searchQuery.trim().toLocaleLowerCase('ar'))) : [];
+  const priceValue = (product) => Number.parseFloat(String(product.price || '').replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '')) || Number.POSITIVE_INFINITY;
+  const sortProducts = (products) => sortOrder === 'price-asc' ? [...products].sort((first, second) => priceValue(first) - priceValue(second)) : products;
+  const activeProducts = activeCategory ? sortProducts(publishedProducts.filter((product) => product.category === activeCategory.name && (!activeSubcategory || product.branch === activeSubcategory))) : [];
+  const searchResults = searchQuery.trim() ? sortProducts(publishedProducts.filter((product) => [product.title, product.description, product.store, product.category, product.branch].filter(Boolean).join(' ').toLocaleLowerCase('ar').includes(searchQuery.trim().toLocaleLowerCase('ar')))) : [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -150,7 +153,7 @@ export default function Home() {
         {selectedImage && <div className="image-search-status"><ImageIcon aria-hidden="true" /><span>تم اختيار صورة للبحث</span><button type="button" onClick={() => { setSelectedImage(null); setImageSearchMessage(''); }}>إزالة</button></div>}
         {imageSearchMessage && <p className="image-search-message">{imageSearchMessage}</p>}
 
-        <div className="currency-bar"><span>العملة</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SOURCE' ? 'active' : ''} onClick={() => setCurrency('SOURCE')}>الأصلي</button><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div>
+        <div className="toolbar-row"><div className="currency-bar"><span>العملة</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SOURCE' ? 'active' : ''} onClick={() => setCurrency('SOURCE')}>الأصلي</button><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div><label className="sort-box"><span>ترتيب المنتجات</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} aria-label="ترتيب المنتجات حسب السعر"><option value="default">الترتيب الافتراضي</option><option value="price-asc">السعر: من الأقل إلى الأعلى</option></select></label></div>
         {searchQuery.trim() && <section className="search-results-panel" aria-label="نتائج البحث"><div className="search-results-heading"><strong>نتائج البحث عن: {searchQuery}</strong><span>{searchResults.length} منتج</span></div>{searchResults.length ? <div className="search-results-grid">{searchResults.map((product) => <article className="search-result-card" key={product.id || product.title}><img src={product.image} alt={product.title} /><div><span>{product.store}</span><h2>{product.title}</h2><p>{formatPrice(product.price, currency)}</p>{product.url && <a href={product.url} target="_blank" rel="noreferrer">شراء المنتج</a>}</div></article>)}</div> : <p className="search-empty">لم نعثر على منتج بهذه الكلمة.</p>}</section>}
 
         <section className={`hero-banner hero-${heroSlides[heroIndex].tone}`} aria-label="رسائل متجر كادل">
