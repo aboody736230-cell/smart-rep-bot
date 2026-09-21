@@ -98,6 +98,7 @@ export default function Home() {
   const activeCategory = categories.find((category) => category.id === openCategory);
   const activeDetail = activeCategory ? categoryDetails[activeCategory.id] : null;
   const activeProducts = activeCategory ? publishedProducts.filter((product) => product.category === activeCategory.name && (!activeSubcategory || product.branch === activeSubcategory)) : [];
+  const searchResults = searchQuery.trim() ? publishedProducts.filter((product) => [product.title, product.description, product.store, product.category, product.branch].filter(Boolean).join(' ').toLocaleLowerCase('ar').includes(searchQuery.trim().toLocaleLowerCase('ar'))) : [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -129,7 +130,7 @@ export default function Home() {
     const file = event.target.files?.[0];
     if (!file) return;
     setSelectedImage(URL.createObjectURL(file));
-    setImageSearchMessage('تم اختيار الصورة، وسيتم ربط البحث البصري بالمنتجات عند تجهيز أداة الأدمن.');
+    setImageSearchMessage('تم اختيار الصورة. البحث البصري يحتاج مطابقة صور بالذكاء الاصطناعي، وهو غير مفعّل في النسخة الحالية حتى لا نعرض نتائج غير صحيحة.');
   };
 
   return (
@@ -149,6 +150,7 @@ export default function Home() {
         {imageSearchMessage && <p className="image-search-message">{imageSearchMessage}</p>}
 
         <div className="currency-bar"><span>العملة</span><div className="currency-switch" aria-label="تحويل العملة"><button type="button" className={currency === 'SOURCE' ? 'active' : ''} onClick={() => setCurrency('SOURCE')}>الأصلي</button><button type="button" className={currency === 'SAR' ? 'active' : ''} onClick={() => setCurrency('SAR')}>ر.س</button><button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>$</button></div></div>
+        {searchQuery.trim() && <section className="search-results-panel" aria-label="نتائج البحث"><div className="search-results-heading"><strong>نتائج البحث عن: {searchQuery}</strong><span>{searchResults.length} منتج</span></div>{searchResults.length ? <div className="search-results-grid">{searchResults.map((product) => <article className="search-result-card" key={product.id || product.title}><img src={product.image} alt={product.title} /><div><span>{product.store}</span><h2>{product.title}</h2><p>{formatPrice(product.price, currency)}</p>{product.url && <a href={product.url} target="_blank" rel="noreferrer">شراء المنتج</a>}</div></article>)}</div> : <p className="search-empty">لم نعثر على منتج بهذه الكلمة.</p>}</section>}
 
         <section className={`hero-banner hero-${heroSlides[heroIndex].tone}`} aria-label="رسائل متجر كادل">
           <div className="hero-content"><span>{heroSlides[heroIndex].eyebrow}</span><h2>{heroSlides[heroIndex].title}</h2><p>{heroSlides[heroIndex].text}</p></div>
