@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Edit3, Link2, LockKeyhole, LogIn, Plus, Search, Store, Trash2 } from 'lucide-react';
 
 const stores = ['SHEIN', 'Amazon', 'Temu', 'AliExpress', 'نون', 'نمشي', 'ترينديول'];
-const childSubcategories = { بناتي: ['فساتين', 'ملابس داخلية', 'أحذية', 'كماليات', 'بناطيل', 'تيشرتات', 'قمصان'], ولادي: ['أطقم', 'ملابس داخلية', 'أحذية', 'تيشرتات', 'بناطيل', 'قمصان'] };
+const childSubcategories = { بناتي: ['فساتين', 'ملابس داخلية', 'أحذية', 'كماليات', 'بناطيل', 'تيشرتات', 'قمصان', 'بجام'], ولادي: ['أطقم', 'ملابس داخلية', 'أحذية', 'تيشرتات', 'بناطيل', 'قمصان'] };
 const categories = [
   { name: 'الأحذية', branches: ['أحذية رياضية', 'أحذية مشي', 'أحذية كعب', 'أحذية كاجوال'] },
   { name: 'الملابس', branches: ['فساتين', 'بلوزات', 'فساتين سهرات', 'جينزات', 'ملابس داخلية', 'سراويل'] },
