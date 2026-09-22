@@ -10,6 +10,7 @@ const categories = [
   { name: 'الملابس', branches: ['فساتين', 'بلوزات', 'فساتين سهرات', 'جينزات', 'ملابس داخلية', 'سراويل'] },
   { name: 'الشنط', branches: ['شنط كتف', 'شنط سهرات', 'شنط يد'] },
   { name: 'العناية والجمال', branches: ['مكياج وتجميل', 'العناية بالشعر', 'العناية بالبشرة'] },
+  { name: 'الإكسسوارات', branches: ['مجوهرات', 'ساعات', 'نظارات', 'إكسسوارات شعر', 'إكسسوارات نسائية'] },
   { name: 'العطور', branches: [] },
   { name: 'الأطفال', branches: ['مواليد', 'بناتي', 'ولادي'] },
 ];
@@ -100,7 +101,7 @@ export default function AdminPage() {
     event.preventDefault();
     if (!productUrl.trim()) return setNotice('ألصق رابط المنتج أولًا.');
     setNotice(`جارٍ السحب من ${store}...`);
-    const response = await fetch('/api/admin/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: productUrl, store, category, branch }) });
+    const response = await fetch('/api/admin/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: productUrl, store, category, branch: category === 'الأطفال' && childBranch && branch !== childBranch ? `${childBranch}::${branch}` : branch }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setNotice(data.error || 'تعذر سحب المنتج.');
     setProductDraft({ title: data.product.title || '', price: data.product.price || '', image: data.product.image || '', description: data.product.description || '' });
@@ -110,7 +111,7 @@ export default function AdminPage() {
   const addProductToStore = async () => {
     if (!productUrl.trim() || !productDraft.title.trim() || !productDraft.price.trim() || !productDraft.image.trim()) return setNotice('أكمل رابط العمولة واسم المنتج والسعر ورابط الصورة أولًا.');
     if (products.some((product) => normalizeProductUrl(product.url) === normalizeProductUrl(productUrl))) return setNotice('هذا الرابط والمنتج موجودان من قبل داخل المتجر.');
-    const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch }) });
+    const response = await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: productDraft.title.trim(), price: productDraft.price.trim(), image: productDraft.image.trim(), description: productDraft.description.trim(), url: productUrl.trim(), store, category, branch: category === 'الأطفال' && childBranch && branch !== childBranch ? `${childBranch}::${branch}` : branch }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setNotice(data.error || 'تعذر حفظ المنتج.');
     setProducts((current) => [data.product, ...current]);

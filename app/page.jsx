@@ -9,10 +9,12 @@ const categories = [
   { id: 'clothes', name: 'الملابس', icon: '👗', subcategories: ['فساتين', 'بلوزات', 'فساتين سهرات', 'جينزات', 'ملابس داخلية', 'سراويل'] },
   { id: 'bags', name: 'الشنط', icon: '👜', subcategories: ['شنط كتف', 'شنط سهرات', 'شنط يد'] },
   { id: 'beauty', name: 'العناية والجمال', icon: '💄', subcategories: ['مكياج وتجميل', 'العناية بالشعر', 'العناية بالبشرة'] },
+  { id: 'accessories', name: 'الإكسسوارات', icon: '💎', subcategories: ['مجوهرات', 'ساعات', 'نظارات', 'إكسسوارات شعر', 'إكسسوارات نسائية'] },
   { id: 'perfumes', name: 'العطور', icon: '🌸', subcategories: [] },
 ];
 
 const childSubcategories = {
+  مواليد: [],
   بناتي: ['فساتين', 'ملابس داخلية', 'أحذية', 'كماليات', 'بناطيل', 'تيشرتات'],
   ولادي: ['أطقم', 'ملابس داخلية', 'أحذية', 'تيشرتات', 'بناطيل'],
 };
@@ -30,6 +32,7 @@ const categoryDetails = {
   clothes: { title: 'قسم الملابس', desc: 'تشكيلات راقية تجمع بين الخامات الجميلة والتصاميم العصرية لتناسب ذوقك ومناسباتك المختلفة.', image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'تشكيلة فساتين وملابس عصرية راقية', price: '320.00 رس' }, slides: ['أناقة تليق بك', 'فساتين وملابس لكل مناسبة', 'اختاري إطلالتك بثقة'] },
   bags: { title: 'قسم الشنط', desc: 'شنط أنيقة وعملية بتصميمات عالمية تمنح إطلالتك لمسة فاخرة في كل وقت.', image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'حقيبة يد نسائية جلدية فاخرة', price: '215.50 رس' }, slides: ['تفاصيل صغيرة تصنع الفرق', 'شنط عملية بإطلالة فاخرة', 'اختاري حقيبتك المفضلة'] },
   beauty: { title: 'قسم العناية والجمال', desc: 'منتجات مختارة للعناية والتجميل تساعدك على إبراز جمالك ومنحك إشراقة يومية مميزة.', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'مجموعة العناية والتجميل المتكاملة', price: '145.00 رس' }, slides: ['جمالك يبدأ من عنايتك', 'تألقي بإطلالة طبيعية', 'منتجاتك المفضلة في مكان واحد'] },
+  accessories: { title: 'قسم الإكسسوارات', desc: 'تفاصيل أنيقة تكمل إطلالتك، من المجوهرات والساعات إلى النظارات وإكسسوارات الشعر.', image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'إكسسوارات أنيقة لإطلالة متكاملة', price: '125.00 رس' }, slides: ['تفاصيل تكمّل أناقتك', 'لمسات راقية لكل إطلالة', 'اختاري إكسسواراتك المفضلة'] },
   perfumes: { title: 'قسم العطور', desc: 'عطور راقية بروائح مميزة وثبات جميل لتضيف لمظهرك حضورًا لا يُنسى.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'عطور فاخرة بروائح ثابتة وراقية', price: '189.00 رس' }, slides: ['رائحة تحكي ذوقك', 'اختاري عطرك المميز', 'فخامة تدوم معك'] },
   kids: { title: 'قسم الأطفال', desc: 'تشكيلات لطيفة وعملية للصغار، من ملابس المواليد إلى إطلالات البنات والأولاد اليومية.', image: 'https://images.unsplash.com/photo-1514090458221-65bb69cf63e6?w=700&auto=format&fit=crop&q=80', product: { store: 'AMAZON', title: 'تشكيلات أطفال لطيفة وعملية', price: '99.00 رس' }, slides: ['ألوان طفولية مبهجة', 'إطلالات للصغار بكل حب', 'اختيارات مريحة لكل يوم'] },
 };
@@ -102,6 +105,16 @@ export default function Home() {
   const priceValue = (product) => Number.parseFloat(String(product.price || '').replace(/[٠-٩]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'.indexOf(digit)).replace(/[^0-9.]/g, '')) || Number.POSITIVE_INFINITY;
   const sortProducts = (products) => sortOrder === 'price-asc' ? [...products].sort((first, second) => priceValue(first) - priceValue(second)) : products;
   const activeProducts = activeCategory ? sortProducts(publishedProducts.filter((product) => product.category === activeCategory.name && (!activeSubcategory || product.branch === activeSubcategory))) : [];
+  const childProducts = sortProducts(publishedProducts.filter((product) => {
+    if (product.category !== 'الأطفال' || !activeChildBranch) return false;
+    const branch = String(product.branch || '').trim();
+    const selected = String(activeSubcategory || '').trim();
+    const main = activeChildBranch;
+    const isMain = branch === main || branch.startsWith(`${main}::`);
+    if (!selected) return isMain || (main === 'مواليد' && branch === 'مواليد');
+    return branch === selected || branch === `${main}::${selected}`;
+  }));
+  const renderChildProduct = (product) => <article className="product-card" key={product.id || product.title}><div className="product-information"><span className="store-label">{product.store}</span><h3>{product.title}</h3><p className="product-price">{formatPrice(product.price, currency)}</p>{product.url && <a className="buy-product-button" href={product.url} target="_blank" rel="noreferrer">🛍️ شراء المنتج</a>}</div><div className="product-image-wrapper product-image-button" role="button" tabIndex="0" aria-label={`تكبير صورة ${product.title}`} onClick={() => setPreviewImage({ src: product.image, title: product.title })}><img src={product.image} alt={product.title} onLoad={fitProductImage} /></div></article>;
   const searchResults = searchQuery.trim() ? sortProducts(publishedProducts.filter((product) => [product.title, product.description, product.store, product.category, product.branch].filter(Boolean).join(' ').toLocaleLowerCase('ar').includes(searchQuery.trim().toLocaleLowerCase('ar')))) : [];
 
   useEffect(() => {
@@ -175,6 +188,7 @@ export default function Home() {
           <div className="kids-store-heading"><div><span>🧸</span><h2>قسم الأطفال</h2></div><p>اختيارات لطيفة ومريحة للصغار بكل ألوان الطفولة</p></div>
           <div className="kids-main-branches">{['مواليد', 'بناتي', 'ولادي'].map((branch) => <button type="button" key={branch} className={`kids-main-branch ${activeChildBranch === branch ? 'active' : ''}`} onClick={() => { setActiveChildBranch(activeChildBranch === branch ? '' : branch); setActiveSubcategory(''); }}>{branch}</button>)}</div>
           {activeChildBranch && childSubcategories[activeChildBranch] && <div className="kids-subcategory-list kids-store-subcategories"><span>اختيارات {activeChildBranch}</span>{childSubcategories[activeChildBranch].map((subcategory) => <button type="button" key={subcategory} className={`subcategory-pill ${activeSubcategory === subcategory ? 'subcategory-pill-active' : ''}`} onClick={() => setActiveSubcategory(activeSubcategory === subcategory ? '' : subcategory)}>{subcategory}</button>)}</div>}
+          {activeChildBranch && (activeSubcategory || activeChildBranch === 'مواليد') && <div className="branch-products-grid kids-products-grid">{childProducts.length ? childProducts.map(renderChildProduct) : <p className="branch-empty-message">لا توجد منتجات مضافة لهذا الفرع حاليًا.</p>}</div>}
         </section>
 
 
