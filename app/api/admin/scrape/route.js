@@ -100,7 +100,8 @@ async function aliExpressReaderFallback(productId, sourceUrl) {
   const markdown = await response.text();
   const title = markdown.match(/^Title:\s*(.+)$/m)?.[1]?.trim() || '';
   const images = [...markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)].map((match) => match[1].replace(/_220x220q75\.jpg_\.avif$/, '_960x960q75.jpg_.avif'));
-  const image = images.find((value) => !/48x48|all-categories|search-by-image/i.test(value)) || '';
+  const productImages = images.slice(2).filter((value) => !/48x48|all-categories|search-by-image/i.test(value));
+  const image = productImages.find((value) => /_960x960|_800x800|_1000x1000/i.test(value)) || productImages[0] || '';
   const sourcePrice = aliExpressPriceFromUrl(sourceUrl);
   return { title, image, price: sourcePrice.price, currency: sourcePrice.currency };
 }
