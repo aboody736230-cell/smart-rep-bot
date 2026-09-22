@@ -7,7 +7,7 @@ const domains = {
   SHEIN: ['shein.com', 'us.shein.com', 'ar.shein.com'],
   Amazon: ['amazon.com', 'amazon.sa', 'amazon.ae', 'amazon.co.uk', 'amazon.ca', 'amazon.de', 'amazon.fr', 'amazon.it', 'amazon.es', 'amazon.in', 'amazon.com.tr'],
   Temu: ['temu.com'],
-  AliExpress: ['aliexpress.com'],
+  AliExpress: ['aliexpress.com', 'aliexpress.ru'],
   'نون': ['noon.com'],
   'نمشي': ['namshi.com'],
   'ترينديول': ['trendyol.com'],
@@ -80,6 +80,29 @@ function currencyFromHost(hostname) {
 
 function currencyFromDocument($, html, fallback) {
   return meta($, 'product:price:currency') || $('[itemprop="priceCurrency"]').first().attr('content') || (html.match(/(?:currencyCode|currency|priceCurrency)["']?\s*[:=]\s*["']?(SAR|AED|USD|GBP|EUR|CAD|INR|TRY)/i)?.[1] || fallback);
+}
+
+function aliExpressProductId(value) {
+  return String(value || '').match(/(?:\/item\/|[?&](?:productId|itemId)=)(\d{8,})/i)?.[1] || '';
+}
+
+function aliExpressPriceFromUrl(value) {
+  const match = String(value || '').match(/pdp_npi=[^#]*?%?40?dis%?21([A-Z]{3})%?21([0-9.,]+)%?21([0-9.,]+)/i);
+  if (!match) return { price: '', currency: '' };
+  return { price: match[3].replace(',', '.'), currency: match[1].toUpperCase() };
+}
+
+async function aliExpressReaderFallback(productId, sourceUrl) {
+  if (!productId) return {};
+  const readerUrl = `https://r.jina.ai/http://www.aliexpress.com/item/${productId}.html`;
+  const response = await fetch(readerUrl, { headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'text/plain' }, signal: AbortSignal.timeout(12000), cache: 'no-store' });
+  if (!response.ok) return {};
+  const markdown = await response.text();
+  const title = markdown.match(/^Title:\s*(.+)$/m)?.[1]?.trim() || '';
+  const images = [...markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g)].map((match) => match[1].replace(/_220x220q75\.jpg_\.avif$/, '_960x960q75.jpg_.avif'));
+  const image = images.find((value) => !/48x48|all-categories|search-by-image/i.test(value)) || '';
+  const sourcePrice = aliExpressPriceFromUrl(sourceUrl);
+  return { title, image, price: sourcePrice.price, currency: sourcePrice.currency };
 }
 
 function amazonAsin(value) {
@@ -162,6 +185,25 @@ export async function POST(request) {
       if (asin) image = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg`;
     }
 
+    if (store === 'AliExpress') {
+      const productId = aliExpressProductId(finalUrl.toString()) || aliExpressProductId(target.toString()) || aliExpressProductId(html);
+      const aliPrice = aliExpressPriceFromUrl(finalUrl.toString());
+      const aliChallenge = /captcha|verification|x5secdata|\bpunish\b|\"action\":\"captcha\"/i.test(`${title} ${image} ${html}`);
+      if (aliChallenge) { title = ''; image = ''; description = ''; }
+      if (productId && (!title || !image || !price || aliChallenge)) {
+        try {
+          const fallback = await aliExpressReaderFallback(productId, finalUrl.toString());
+          title = title || fallback.title;
+          image = image || fallback.image;
+          price = price || fallback.price || aliPrice.price;
+          currency = currency || fallback.currency || aliPrice.currency;
+        } catch {}
+      }
+      if (!price) price = aliPrice.price;
+      if (!currency) currency = aliPrice.currency;
+      if (!title && productId) title = `منتج AliExpress رقم ${productId}`;
+    }
+
     const linkedProductUrl = $('#url').attr('value') || $('input[name="url"]').attr('value') || '';
     if (!price && linkedProductUrl) {
       try {
@@ -186,6 +228,6 @@ export async function POST(request) {
 
     return NextResponse.json({ product: { title: title || 'منتج بدون اسم', description, price: price ? `${price}${currency ? ` ${currency}` : ''}` : 'غير متوفر', image, url: target.toString(), store, category, branch: branch || 'بدون فرع', status: 'مسودة' } });
   } catch (error) {
-    return NextResponse.json({ error: error?.name === 'TimeoutError' ? 'انتهى وقت الاتصال بأمازون.' : 'تعذر الوصول إلى صفحة المنتج. قد يكون المتجر حاجبًا للطلبات المباشرة.' }, { status: 502 });
+    return NextResponse.json({ error: error?.name === 'TimeoutError' ? `انتهى وقت الاتصال ب${store}.` : 'تعذر الوصول إلى صفحة المنتج. قد يكون المتجر حاجبًا للطلبات المباشرة.' }, { status: 502 });
   }
 }
